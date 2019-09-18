@@ -20,6 +20,10 @@ class MedicalModel(Model):
 
         atoms = [numpy.random.choice(numpy.arange(0, 1, 0.01)) for x in range(5)]
         possible_decisions = [0, 1, 2]
+
+        # actual ground truth of the diagnosis
+        # in this particular case, we assume it to be decision 2
+        ground_truth = 2
         
         # create agents
 
@@ -27,7 +31,7 @@ class MedicalModel(Model):
             # belief array is randomly generated for each each
             # represents likeliness of an agent to believe a given atom
             belief_array = [numpy.random.choice(numpy.arange(0, 1, 0.01)) for x in range(5)]
-            doctor = DoctorAgent(agent, self, belief_array, possible_decisions, atoms)
+            doctor = DoctorAgent(agent, self, belief_array, possible_decisions, atoms, ground_truth)
             self.schedule.add(doctor)
 
     def step(self):
@@ -37,5 +41,15 @@ class MedicalModel(Model):
             Randomly initialize doctors and print out ensemble decision,
             based on initial belief vectors and atom probabilities
         """
+        doctors = self.schedule.agents
+        print("Doctor belief arrays before argumentation \n\n")
+        
+        for doctor in doctors:
+            print(doctor.belief_array)
 
         self.schedule.step()
+        print("\n\n")
+        print("Doctor belief arrays after argumentation \n\n")
+        doctors = self.schedule.agents
+        for doctor in doctors:
+            print(doctor.belief_array)
