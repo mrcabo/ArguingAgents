@@ -24,16 +24,18 @@ class DoctorAgent(Agent):
     
       """
 
-     def __init__(self, unique_id, model, belief_array, possible_decisions, atoms):
+     def __init__(self, unique_id, model, belief_array, possible_decisions, atoms, ground_truth):
          super().__init__(unique_id, model)
 
+         self._doctor_id = unique_id
          self.belief_array = belief_array
          self.resultant_belief = dot(belief_array, atoms)
          self.decision_class = numpy.random.choice(possible_decisions)
          self.expertise_class = numpy.random.choice(possible_decisions)
          self.expertise = numpy.random.choice(numpy.arange(0, 1, 0.01))
          self.influence = numpy.random.choice(numpy.arange(0, 1, 0.01))
-         print("Doctor agent initialized")
+         self.ground_truth = ground_truth
+         # print("Doctor agent initialized")
 
      def step(self):
         """
@@ -46,19 +48,49 @@ class DoctorAgent(Agent):
 
         """
      
-        print("inside the step function")
-        ensemble_decision = dict()
+        # print("inside the step function")
+        ensemble_decision_before = dict()
         doctors = self.model.schedule.agents
+        
 
-        # loop through decision of all the doctors in the committee
+
         for doctor in doctors:
-             if doctor.decision_class in ensemble_decision:
-                  ensemble_decision[doctor.decision_class] += 1
+             # print('Resultant Belief: ' + str(doctor.resultant_belief))
+             if doctor.decision_class in ensemble_decision_before:
+                  ensemble_decision_before[doctor.decision_class] += 1
              else:
-                  ensemble_decision[doctor.decision_class] = 1
+                  ensemble_decision_before[doctor.decision_class] = 1
 
-        # print ensemble decision
-        print('Final decision from ensemble: ', ensemble_decision)
+        # print ensemble decision before belief array update
+        # print('Final decision from ensemble before belief array update: ', ensemble_decision_before)
+
+
+        """
+        # loop through decision of all the doctors in the committee
+        # if expertise class of a doctor is same as ground_truth
+        # in this case, this particular doctor can randomly update belief_array of
+        # all the doctors whose expertise class is not ground_truth or whose expertise
+        # is less than this doctor is ground_truth and expertise classes match
+        """
+
+        if self.expertise_class == self.ground_truth:
+             for doctor in doctors:
+                  if doctor.expertise_class != self.ground_truth:
+                       doctor.belief_array = [numpy.random.choice(numpy.arange(0, 1, 0.01)) for x in range(5)]
+                  if doctor.expertise_class == self.ground_truth and self.expertise > doctor.expertise:
+                       doctor.belief_array = [numpy.random.choice(numpy.arange(0, 1, 0.01)) for x in range(5)]
+
+        ensemble_decision_after = dict()
+        
+        for doctor in doctors:
+             # print('Resultant Belief: ' + str(doctor.resultant_belief))
+             if doctor.decision_class in ensemble_decision_after:
+                  ensemble_decision_after[doctor.decision_class] += 1
+             else:
+                  ensemble_decision_after[doctor.decision_class] = 1
+
+        # print ensemble decision after belief array update
+        # print('Final decision from ensemble after belief array update: ', ensemble_decision_after)
             
 
 
