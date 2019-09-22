@@ -1,6 +1,6 @@
 from medical_diagnosis.Model import MedicalModel
 from mesa.visualization.ModularVisualization import ModularServer
-from mesa.visualization.modules import CanvasGrid, TextElement
+from mesa.visualization.modules import TextElement
 from mesa.visualization.UserParam import UserSettableParameter
 
 

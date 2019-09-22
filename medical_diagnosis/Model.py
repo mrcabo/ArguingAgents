@@ -1,7 +1,8 @@
+import numpy
+
 from mesa import Model
 from mesa.time import RandomActivation
-from DoctorAgent import DoctorAgent
-import numpy
+from medical_diagnosis.DoctorAgent import DoctorAgent
 
 
 class MedicalModel(Model):
@@ -35,7 +36,6 @@ class MedicalModel(Model):
             self.schedule.add(doctor)
 
     def step(self):
-
         """
             Advance the model by one step.
             Randomly initialize doctors and print out ensemble decision,
