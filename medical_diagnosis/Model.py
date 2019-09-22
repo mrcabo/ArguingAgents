@@ -11,8 +11,8 @@ class MedicalModel(Model):
         Through multiple time steps, updating each other's belief array
     """
 
-    def __init__(self, n):
-        self.num_agents = n
+    def __init__(self, N=3):
+        self.num_agents = N
         self.schedule = RandomActivation(self)
 
         # initialize atoms with respective probabilities
