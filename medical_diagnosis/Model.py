@@ -24,7 +24,7 @@ class MedicalModel(Model):
         # actual ground truth of the diagnosis
         # in this particular case, we assume it to be decision 2
         ground_truth = 2
-        
+
         # create agents
 
         for agent in range(self.num_agents):
@@ -43,7 +43,7 @@ class MedicalModel(Model):
         """
         doctors = self.schedule.agents
         print("Doctor belief arrays before argumentation \n\n")
-        
+
         for doctor in doctors:
             print(doctor.belief_array)
 
