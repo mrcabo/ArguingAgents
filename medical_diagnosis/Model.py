@@ -1,8 +1,32 @@
+from functools import partial
 import numpy
 
 from mesa import Model
 from mesa.time import RandomActivation
+from mesa.datacollection import DataCollector
+
 from medical_diagnosis.DoctorAgent import DoctorAgent
+
+ARGUMENT_NAMES = ('A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J')
+COLORS = ('#00FF00', '#FF0000', '#0000FF', '#383B38', '#FF00FF',
+          '#8000FF', '#FF7F00', '#F6F90E', '#6E1122', '#3B541F')
+
+
+def calculate_avg_belief(idx, model):
+    """
+    Calculates the mean of the belief for a certain argument between all agents
+    Args:
+        idx (int): The index of the argument to be calculated
+        model (MedicalModel): Model object of our simulation
+
+    Returns:
+        Mean value for the belief in an argument between agents
+    """
+    avg = 0
+    for agent in model.schedule.agents:
+        avg += agent.belief_array[idx]
+    avg = avg / len(model.schedule.agents)
+    return avg
 
 
 class MedicalModel(Model):
@@ -12,8 +36,9 @@ class MedicalModel(Model):
         Through multiple time steps, updating each other's belief array
     """
 
-    def __init__(self, N=3):
+    def __init__(self, N=3, n_init_arg=5):
         self.num_agents = N
+        self.n_initial_arguments = n_init_arg  # Number of initial arguments that doctors will consider
         self.schedule = RandomActivation(self)
 
         # initialize atoms with respective probabilities
@@ -35,6 +60,19 @@ class MedicalModel(Model):
             doctor = DoctorAgent(agent, self, belief_array, possible_decisions, atoms, ground_truth)
             self.schedule.add(doctor)
 
+        # Create dictionary where avg_belief will be tracked for each argument
+        dict_avg_belief_arr = {}
+        for i in range(self.n_initial_arguments):
+            avg_belief = partial(calculate_avg_belief, i)
+            dict_avg_belief_arr[ARGUMENT_NAMES[i]] = avg_belief
+        # Collects data that will be collected in every step of the simulation
+        self.datacollector = DataCollector(
+            model_reporters=dict_avg_belief_arr,
+            agent_reporters={"Belief Array": "belief_array"})
+
+        self.running = True
+        self.datacollector.collect(self)
+
     def step(self):
         """
             Advance the model by one step.
@@ -53,3 +91,5 @@ class MedicalModel(Model):
         doctors = self.schedule.agents
         for doctor in doctors:
             print(doctor.belief_array)
+
+        self.datacollector.collect(self)
