@@ -10,35 +10,7 @@ def dot(x, y):
     return (sum(x_i * y_i for x_i, y_i in zip(x, y)))
 
 
-class DoctorAgent(Agent):
-    """
-       A doctor agent
-
-       Activated at each time step
-
-       Attributes
-
-       * Likeliness to believe a given fact[for all symptoms](randomly drawn from a normal distribution)
-       * Model with five symptom atoms(statements stating symptons)
-       * Expertise in a given medical field(randomly drawn from a normal distribution)
-       * Influential(pursuasiveness of beliefs) during an argumentation session(randomly drawn)
-
-     """
-
-    def __init__(self, unique_id, model, belief_array, possible_decisions, atoms, ground_truth):
-        super().__init__(unique_id, model)
-
-        self._doctor_id = unique_id
-        self.belief_array = belief_array
-        self.resultant_belief = dot(belief_array, atoms)
-        self.decision_class = numpy.random.choice(possible_decisions)
-        self.expertise_class = numpy.random.choice(possible_decisions)
-        self.expertise = numpy.random.choice(numpy.arange(0, 1, 0.01))
-        self.influence = numpy.random.choice(numpy.arange(0, 1, 0.01))
-        self.ground_truth = ground_truth
-        # print("Doctor agent initialized")
-
-    def step(self):
+def alternative_step(self):
         """
         A doctor agent set of rules for each step of argumentation
 
@@ -89,3 +61,37 @@ class DoctorAgent(Agent):
 
         # print ensemble decision after belief array update
         # print('Final decision from ensemble after belief array update: ', ensemble_decision_after)
+
+
+class DoctorAgent(Agent):
+    """
+       A doctor agent
+
+       Activated at each time step
+
+       Attributes
+
+       * Likeliness to believe a given fact[for all symptoms](randomly drawn from a normal distribution)
+       * Model with five symptom atoms(statements stating symptons)
+       * Expertise in a given medical field(randomly drawn from a normal distribution)
+       * Influential(pursuasiveness of beliefs) during an argumentation session(randomly drawn)
+
+     """
+
+    def __init__(self, unique_id, model, belief_array, possible_decisions, atoms, ground_truth):
+        super().__init__(unique_id, model)
+
+        self._doctor_id = unique_id
+        self.belief_array = belief_array
+        self.resultant_belief = dot(belief_array, atoms)
+        self.decision_class = numpy.random.choice(possible_decisions)
+        self.expertise_class = numpy.random.choice(possible_decisions)
+        self.expertise = numpy.random.choice(numpy.arange(0, 1, 0.01))
+        self.influence = numpy.random.choice(numpy.arange(0, 1, 0.01))
+        self.ground_truth = ground_truth
+        # print("Doctor agent initialized")
+
+    def step(self):
+        
+        alternative_step()
+
