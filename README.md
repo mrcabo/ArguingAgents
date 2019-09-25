@@ -27,6 +27,8 @@ Its goal is to be the Python 3-based alternative to NetLogo, Repast, or MASON
 
 ## Useful Links and Papers
 
+[Modeling Influence In Group Decision Making](http://www.cse.dmu.ac.uk/~chiclana/publications/SOCO-DEC-2015.pdf)
+[A probabilistic approach to modelling uncertain logical arguments](https://www.sciencedirect.com/science/article/pii/S0888613X12001442)
 
 ## Troubleshooting
 
