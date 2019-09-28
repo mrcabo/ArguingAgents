@@ -65,30 +65,31 @@ def alternative_step(self):
 
 class DoctorAgent(Agent):
     """
-       A doctor agent
+        The agent model class for the doctors.
 
-       Activated at each time step
-
-       Attributes
-
-       * Likeliness to believe a given fact[for all symptoms](randomly drawn from a normal distribution)
-       * Model with five symptom atoms(statements stating symptons)
-       * Expertise in a given medical field(randomly drawn from a normal distribution)
-       * Influential(pursuasiveness of beliefs) during an argumentation session(randomly drawn)
-
+        Attributes:
+            _doctor_id: agent's unique ID
+            belief_array (list): Represents how the doctor believes in each of the arguments presented. A 1
+                represents absolute certainty while 0 represents complete disbelief. -1 means the agent doesn't have
+                knowledge for that argument yet
+            stubbornness (float): How difficult it is to change this doctor's mind. From 0 to 1, 1 being impossible
+                to change his mind
+            influence (float): How good is the agent at convincing people. From 0 to 1, 1 being the highest chances
+                of convincing
      """
 
-    def __init__(self, unique_id, model, belief_array, possible_decisions, atoms, ground_truth):
+    def __init__(self, unique_id, model, belief_array, influence=0.5, stubbornness=0.5):
         super().__init__(unique_id, model)
 
         self._doctor_id = unique_id
         self.belief_array = belief_array
-        self.resultant_belief = dot(belief_array, atoms)
-        self.decision_class = numpy.random.choice(possible_decisions)
-        self.expertise_class = numpy.random.choice(possible_decisions)
-        self.expertise = numpy.random.choice(numpy.arange(0, 1, 0.01))
-        self.influence = numpy.random.choice(numpy.arange(0, 1, 0.01))
-        self.ground_truth = ground_truth
+        self.influence = influence
+        self.stubbornness = stubbornness
+        # self.resultant_belief = dot(belief_array, atoms)
+        # self.decision_class = numpy.random.choice(possible_decisions)
+        # self.expertise_class = numpy.random.choice(possible_decisions)
+        # self.expertise = numpy.random.choice(numpy.arange(0, 1, 0.01))
+        # self.ground_truth = ground_truth
         # print("Doctor agent initialized")
 
     def step(self):
