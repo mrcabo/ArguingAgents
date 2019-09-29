@@ -66,7 +66,7 @@ def alternative_step(self):
 def transform_convincing_value(array, inv=False):
     """
     The mapping from the belief array to the convincing value is :math:`f(x) = 2x-1`, so that for 0.5 (uncertainty)
-    the convincing value equals zero, and for 0 (complete disbelief) the convincing value equals one.
+    the convincing value equals zero, and for 0 (complete disbelief) the convincing value equals minus one.
 
     Args:
         array: List of values to be transformed
@@ -84,7 +84,13 @@ def transform_convincing_value(array, inv=False):
 
 def default_case_influencing(agent):
     """
-    Simulates how agents influence others.
+    Simulates how an agent influence others. We define a convincing value, which reflects how far from 0.5 the belief
+    value is. We map the beliefs values to the convincing values following :math:`f(x) = 2x-1`.
+
+    For example, if we have the argument belief A, the convincing value A' is :math:`f(A)=A'` (e.g. if A=0.4 then
+    A'=-0.2).
+
+    Then, when appropriate, we update the other doctors beliefs with :math:`f(B'+\lambda * A')^{-1}`
 
     Args:
         agent (DoctorAgent): Agent that will influence the others
@@ -101,16 +107,18 @@ def default_case_influencing(agent):
             signs_agent = numpy.sign(agent_conv_array)
             signs_vector = numpy.sign(agent_conv_array - doctor_conv_array)  # (A' - B')
             for arg_idx, _ in enumerate(agent.belief_array):  # Loop over every argument
+                # Can't influence others with higher beliefs in that argument
                 if signs_vector[arg_idx] == signs_agent[arg_idx]:
                     alpha = agent.influence * doctor.stubbornness  # Regulates the influence
                     delta_belief = alpha * agent_conv_array[arg_idx]
-                    # An agent can only influence up to the same level of uncertainty that he has. So we limit it
+                    # An agent can only influence up to the same level of uncertainty that he has. So we limit it in
+                    # case the update step becomes too big
                     if abs(agent_conv_array[arg_idx]) > abs(doctor_conv_array[arg_idx] + delta_belief):
                         new_val = doctor_conv_array[arg_idx] + delta_belief
                     else:
                         new_val = agent_conv_array[arg_idx]
                     doctor_conv_array[arg_idx] = new_val
-            doctor.belief_array = transform_convincing_value(doctor_conv_array, inv=True)
+            doctor.belief_array = transform_convincing_value(doctor_conv_array, inv=True)  # Convert B' back to B
 
 
 class DoctorAgent(Agent):

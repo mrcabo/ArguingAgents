@@ -108,12 +108,13 @@ class MedicalModel(Model):
         for i in range(self.n_initial_arguments):
             avg_belief = partial(calculate_avg_belief, i)
             dict_model_collector[ARGUMENT_NAMES[i]] = avg_belief
-        # Collects data that will be collected in every step of the simulation
+        # Create dictionary where the belief array of each agent will be tracked
         belief_array_collector = {}
         for arg_idx in range(self.n_initial_arguments):
             belief_value = partial(get_belief_val, arg_idx)
             belief_array_collector[ARGUMENT_NAMES[arg_idx]] = belief_value
 
+        # Collects data that will be collected in every step of the simulation
         self.datacollector = DataCollector(
             model_reporters=dict_model_collector,
             agent_reporters=belief_array_collector)
