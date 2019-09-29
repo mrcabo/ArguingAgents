@@ -92,6 +92,8 @@ def default_case_influencing(agent):
     Returns:
         None
     """
+    agent.model.argumentation_text += "Doctor {} speaks now, trying to influence the other doctors<br>".format(
+        agent.unique_id)
     agent_conv_array = transform_convincing_value(agent.belief_array)  # A'
     for doctor in agent.model.schedule.agents:
         if doctor != agent:

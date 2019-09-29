@@ -33,6 +33,12 @@ def get_belief_val(idx, agent):
     return agent.belief_array[idx]
 
 
+def publish__belief_arrays(model):
+    for doctor in model.schedule.agents:
+        text = "--<b>Doctor {}</b>: {}".format(doctor._doctor_id, doctor.belief_array)
+        model.argumentation_text += text + "<br>"
+
+
 class MedicalModel(Model):
     """
         A model with a set of medical agents
@@ -124,15 +130,11 @@ class MedicalModel(Model):
         self.argumentation_text += '-' * 40 + "<br>"
         self.argumentation_text += "Beginning of argumentation round..<br>Doctor belief arrays before " \
                                    "argumentation:<br>"
-        for doctor in self.schedule.agents:
-            text = "<b>Doctor {}</b>: {}".format(doctor._doctor_id, doctor.belief_array)
-            self.argumentation_text += text + "<br>"
+        publish__belief_arrays(self)
 
         self.schedule.step()
         self.argumentation_text += "Doctor belief arrays after argumentation:<br>"
-        for doctor in self.schedule.agents:
-            text = "<b>Doctor {}</b>: {}".format(doctor._doctor_id, doctor.belief_array)
-            self.argumentation_text += text + "<br>"
+        publish__belief_arrays(self)
 
         # print("\n\n")
         # print("Doctor belief arrays after argumentation \n\n")
