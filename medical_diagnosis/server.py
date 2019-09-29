@@ -1,7 +1,8 @@
 import numpy as np
 
 from mesa.visualization.ModularVisualization import ModularServer
-from mesa.visualization.modules import ChartModule, TextElement
+from mesa.visualization.modules import ChartModule, TextElement, PieChartModule
+from medical_diagnosis.BarChartVisualization import BarChartModule
 from mesa.visualization.UserParam import UserSettableParameter
 
 from medical_diagnosis.Model import MedicalModel, ARGUMENT_NAMES, COLORS
@@ -55,6 +56,15 @@ class ServerClass:
 
         # Here we can display text, now is just displaying agent's beliefs
         printed_arguments = PrintedArgumentationElement()
+
+        list = []
+        for i in range(self.n_init_arg):
+            dict = {"Label": ARGUMENT_NAMES[i], "Color": COLORS[i]}
+            list.append(dict)
+        bar_chart = BarChartModule(list, scope="agent")
+
+        list_of_visualizations = [line_chart, bar_chart, printed_arguments]
+
         # Create server
-        self.server = ModularServer(MedicalModel, [line_chart, printed_arguments], "Evacuation model", model_params)
+        self.server = ModularServer(MedicalModel, list_of_visualizations, "Evacuation model", model_params)
         self.server.port = 8521

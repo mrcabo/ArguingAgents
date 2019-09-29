@@ -63,6 +63,54 @@ def alternative_step(self):
     # print('Final decision from ensemble after belief array update: ', ensemble_decision_after)
 
 
+def transform_convincing_value(array, inv=False):
+    """
+    The mapping from the belief array to the convincing value is :math:`f(x) = 2x-1`, so that for 0.5 (uncertainty)
+    the convincing value equals zero, and for 0 (complete disbelief) the convincing value equals one.
+
+    Args:
+        array: List of values to be transformed
+        inv (bool): If true, do the inverse operation.
+
+    Returns:
+        The transformed array
+    """
+
+    if inv:
+        return numpy.divide(numpy.add(array, 1), 2)
+    else:
+        return numpy.multiply(array, 2) - 1
+
+
+def default_case_influencing(agent):
+    """
+    Simulates how agents influence others.
+
+    Args:
+        agent (DoctorAgent): Agent that will influence the others
+
+    Returns:
+        None
+    """
+    agent_conv_array = transform_convincing_value(agent.belief_array)  # A'
+    for doctor in agent.model.schedule.agents:
+        if doctor != agent:
+            doctor_conv_array = transform_convincing_value(doctor.belief_array)  # B'
+            signs_agent = numpy.sign(agent_conv_array)
+            signs_vector = numpy.sign(agent_conv_array - doctor_conv_array)  # (A' - B')
+            for arg_idx, _ in enumerate(agent.belief_array):  # Loop over every argument
+                if signs_vector[arg_idx] == signs_agent[arg_idx]:
+                    alpha = agent.influence * doctor.stubbornness  # Regulates the influence
+                    delta_belief = alpha * agent_conv_array[arg_idx]
+                    # An agent can only influence up to the same level of uncertainty that he has. So we limit it
+                    if abs(agent_conv_array[arg_idx]) > abs(doctor_conv_array[arg_idx] + delta_belief):
+                        new_val = doctor_conv_array[arg_idx] + delta_belief
+                    else:
+                        new_val = agent_conv_array[arg_idx]
+                    doctor_conv_array[arg_idx] = new_val
+            doctor.belief_array = transform_convincing_value(doctor_conv_array, inv=True)
+
+
 class DoctorAgent(Agent):
     """
         The agent model class for the doctors.
@@ -93,4 +141,6 @@ class DoctorAgent(Agent):
         # print("Doctor agent initialized")
 
     def step(self):
-        alternative_step()
+        # pass
+        # alternative_step()
+        default_case_influencing(self)

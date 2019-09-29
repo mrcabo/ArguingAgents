@@ -29,6 +29,10 @@ def calculate_avg_belief(idx, model):
     return avg
 
 
+def get_belief_val(idx, agent):
+    return agent.belief_array[idx]
+
+
 class MedicalModel(Model):
     """
         A model with a set of medical agents
@@ -38,8 +42,9 @@ class MedicalModel(Model):
     # https://www.sciencedirect.com/science/article/pii/S0185106316301135
     LIST_OF_ARGUMENTS = {"A": "The patient has high fevers, which is one of the main symptoms of Zika",
                          "B": "The patient has high fevers, which is one of the main symptoms of Chikungunya",
-                         "C": "The patient recently traveled to Brazil. To date, Brazil is the country with the largest "
-                              "number of reported cases of Zika; this number is estimated to be between 500,000 and 1,500,000",
+                         "C": "The patient recently traveled to Brazil. To date, Brazil is the country with the "
+                              "largest number of reported cases of Zika; this number is estimated to be between "
+                              "500,000 and 1,500,000",
                          "D": "The patient presents acute joint pain, which is a common symptom of Chikungunya",
                          "E": "RT-PCR test results came positive. The sensitivity of this test for CHIKV (Chikungunya) "
                               "in the early stages of infection is 88.3%."}
@@ -54,27 +59,26 @@ class MedicalModel(Model):
         self.ground_truth = "Y"  # hardcoded for now..
         self.default_case = default_case
         self.argumentation_text = ""
-        if self.default_case:
-            self.schedule = BaseScheduler(self)  # For now so they speak in order..
-        else:
-            self.schedule = RandomActivation(self)  # Every tick, agents move in a different random order
+        # if self.default_case:
+        #     self.schedule = BaseScheduler(self)  # For now so they speak in order..
+        # else:
+        self.schedule = RandomActivation(self)  # Every tick, agents move in a different random order
 
         if self.default_case:
             if (self.num_agents != 3) or (self.n_initial_arguments != 5):
                 print("Sorry, the default case only works with 3 doctors and 5 initial arguments")
                 exit()
             ground_truth = "X"  # The ground truth for this particular diagnosis (real disease)
-            # belief array value of zero means agent didn't have knowledge of that argument yet.
-            belief_array = [[0.75, 0.30, 0.80, 0.50, -1.0],
-                            [0.80, 0.50, 0.70, 0.40, -1.0],
-                            [0.40, 0.90, 0.60, 0.75, 0.98]]
+            belief_array = [[0.75, 0.30, 0.80, 0.50, 0.50],
+                            [0.80, 0.50, 0.70, 0.40, 0.50],
+                            [0.40, 0.90, 0.55, 0.75, 0.98]]
             for i in range(self.num_agents):
                 doctor = DoctorAgent(i, self, belief_array[i])
                 self.schedule.add(doctor)
-            self.argumentation_text += "<h1>Starting simulation of the default case.</h1><br><br>The initial set of " \
+            self.argumentation_text += "<h1>Starting simulation for the default case.</h1><br>The initial set of " \
                                        "arguments is the following:<br>"
-            for arg_name, arg in self.LIST_OF_ARGUMENTS.items():
-                self.argumentation_text += "<b>" + arg_name + "</b>" + ": " + arg + "<br>"
+            for arg_name, arg_idx in self.LIST_OF_ARGUMENTS.items():
+                self.argumentation_text += "<b>" + arg_name + "</b>" + ": " + arg_idx + "<br>"
 
         else:
             atoms = [numpy.random.choice(numpy.arange(0, 1, 0.01)) for x in range(5)]
@@ -99,9 +103,14 @@ class MedicalModel(Model):
             avg_belief = partial(calculate_avg_belief, i)
             dict_model_collector[ARGUMENT_NAMES[i]] = avg_belief
         # Collects data that will be collected in every step of the simulation
+        belief_array_collector = {}
+        for arg_idx in range(self.n_initial_arguments):
+            belief_value = partial(get_belief_val, arg_idx)
+            belief_array_collector[ARGUMENT_NAMES[arg_idx]] = belief_value
+
         self.datacollector = DataCollector(
             model_reporters=dict_model_collector,
-            agent_reporters={"Belief Array": "belief_array"})
+            agent_reporters=belief_array_collector)
 
         self.running = True
         self.datacollector.collect(self)
@@ -112,15 +121,19 @@ class MedicalModel(Model):
             Randomly initialize doctors and print out ensemble decision,
             based on initial belief vectors and atom probabilities
         """
-        print("Beginning of argumentation round..")
-        print("Doctor belief arrays before argumentation \n\n")
-        self.argumentation_text += "Beginning of argumentation round..<br>Doctor belief arrays before argumentation<br>"
+        self.argumentation_text += '-' * 40 + "<br>"
+        self.argumentation_text += "Beginning of argumentation round..<br>Doctor belief arrays before " \
+                                   "argumentation:<br>"
         for doctor in self.schedule.agents:
-            text = "Doctor {}: {}".format(doctor._doctor_id, doctor.belief_array)
-            print(text)
+            text = "<b>Doctor {}</b>: {}".format(doctor._doctor_id, doctor.belief_array)
             self.argumentation_text += text + "<br>"
 
         self.schedule.step()
+        self.argumentation_text += "Doctor belief arrays after argumentation:<br>"
+        for doctor in self.schedule.agents:
+            text = "<b>Doctor {}</b>: {}".format(doctor._doctor_id, doctor.belief_array)
+            self.argumentation_text += text + "<br>"
+
         # print("\n\n")
         # print("Doctor belief arrays after argumentation \n\n")
         # doctors = self.schedule.agents
