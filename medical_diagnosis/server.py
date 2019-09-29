@@ -36,6 +36,18 @@ class PrintedBeliefArray(TextElement):
         return text
 
 
+class LegendElement(TextElement):
+    """
+    Displays a legend for a visualization
+    """
+
+    def __init__(self, text):
+        self.text = text
+
+    def render(self, model):
+        return self.text
+
+
 class ServerClass:
     def __init__(self, n_doctors=3, n_init_arg=5, default_case=True):
         self.n_init_arg = n_init_arg
@@ -61,7 +73,12 @@ class ServerClass:
 
         printed_arguments = PrintedArgumentationElement()
 
-        list_of_visualizations = [line_chart, bar_chart, printed_arguments]
+        title = LegendElement("<h1>Welcome to our simulation</h1>")
+        legend_1 = LegendElement("The graph below represents the average belief between all doctors for each of the  "
+                                 "possible arguments")
+        legend_2 = LegendElement("The graph below displays the belief array for each of the doctors (e.g. Doctor 0, "
+                                 "Doctor 1..)")
+        list_of_visualizations = [title, legend_1, line_chart, legend_2, bar_chart, printed_arguments]
 
         # Create server
         self.server = ModularServer(MedicalModel, list_of_visualizations, "Evacuation model", model_params)
