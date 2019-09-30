@@ -78,7 +78,7 @@ class ServerClass:
                                  "possible arguments")
         legend_2 = LegendElement("The graph below displays the belief array for each of the doctors (e.g. Doctor 0, "
                                  "Doctor 1..)")
-        list_of_visualizations = [title, legend_1, line_chart, legend_2, bar_chart, printed_arguments]
+        list_of_visualizations = [title, legend_2, bar_chart, legend_1, line_chart, printed_arguments]
 
         # Create server
         self.server = ModularServer(MedicalModel, list_of_visualizations, "Evacuation model", model_params)

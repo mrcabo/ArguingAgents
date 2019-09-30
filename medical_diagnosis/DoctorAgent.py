@@ -90,7 +90,7 @@ def default_case_influencing(agent):
     For example, if we have the argument belief A, the convincing value A' is :math:`f(A)=A'` (e.g. if A=0.4 then
     A'=-0.2).
 
-    Then, when appropriate, we update the other doctors beliefs with :math:`f(B'+\lambda * A')^{-1}`
+    Then, when appropriate, we update the other doctors beliefs with :math:`f(B'+\eta A')^{-1}`
 
     Args:
         agent (DoctorAgent): Agent that will influence the others
@@ -109,8 +109,9 @@ def default_case_influencing(agent):
             for arg_idx, _ in enumerate(agent.belief_array):  # Loop over every argument
                 # Can't influence others with higher beliefs in that argument
                 if signs_vector[arg_idx] == signs_agent[arg_idx]:
-                    alpha = agent.influence * doctor.stubbornness  # Regulates the influence
-                    delta_belief = alpha * agent_conv_array[arg_idx]
+                    alpha = 0.25  # constant parameter to better simulate a real speed for convincing other people
+                    eta = agent.influence * (1 - doctor.stubbornness) * alpha  # Regulates the influence
+                    delta_belief = eta * agent_conv_array[arg_idx]
                     # An agent can only influence up to the same level of uncertainty that he has. So we limit it in
                     # case the update step becomes too big
                     if abs(agent_conv_array[arg_idx]) > abs(doctor_conv_array[arg_idx] + delta_belief):
