@@ -62,6 +62,51 @@ def alternative_step(self):
         # print ensemble decision after belief array update
         # print('Final decision from ensemble after belief array update: ', ensemble_decision_after)
 
+def update_influence(self):
+    """
+    Update_influence models how the belief array is updated for each iteration step
+
+    Step 1: if there is one with a higher expertise, then
+    """
+    doctors = self.model.schedule.agents
+    doctor_beliefs = [[doc.beliefconfidence] for doc in doctors]
+    doctor_influences = [doc.influence for doc in doctors]
+    doctor_expertise = [doc.expertise for doc in doctors]
+    doctor_beliefdecisions = [doc.beliefdecision for doc in doctors]
+    """
+    For 
+    """
+
+    # step 1: which of the doctors have the same decision as the ground truth
+    same_decision = doctor_beliefdecisions.index(doctor_beliefdecisions[doctor_beliefdecisions == self.ground_truth])
+    if not same_decision:
+        #randomise the decisions - not sure yet
+        print("No expert decison matches the ground truth")
+    else:
+        #influence 
+        # for each correct expert, influence the others to reduce belief in the earlier decisions
+        which_idx  = self.possible_decisions.index(self.ground_truth)
+        for doc_idx in same_decision:
+            #get inifluence of doctor associated and influence the belief array
+            influe = doctors[doc_idx].influence 
+
+            # to update those with wrong decision
+            for x in range(doctor_beliefs):
+                if x != doc_idx:
+                    # decrease the confidence in other decisions
+                    for y in range(len(doctors[x].beliefconfidence)) :
+                        if y != which_idx:
+                            doctor[x][y] = 
+                                
+                    doctors[x].beliefconfidence = [ x if x != which_idx ]
+        pass
+
+
+   
+
+
+
+
 
 class DoctorAgent(Agent):
     """
@@ -78,17 +123,32 @@ class DoctorAgent(Agent):
 
      """
 
-    def __init__(self, unique_id, model, belief_array, possible_decisions, atoms, ground_truth):
+    def __init__(self, unique_id, model, belief_atoms, beliefdecision, beliefconfidence, possible_decisions, atoms, ground_truth, ):
+        """
+        Args:
+            unique_id:
+            belief_array: 
+            possible_decisions(array): array of possible decisions that can be made in the argumentation
+            atoms(array): array of symptoms with probability of certainity
+            ground_truth: the actual decision
+
+            expertise_class(int): expert decision on what the disease is
+            expertise(float): certainity on their expertise
+            decision_class(int): what the decision is in a given iteration
+            resultant_belief: ?
+
+        """
         super().__init__(unique_id, model)
 
         self._doctor_id = unique_id
-        self.belief_array = belief_array
-        self.resultant_belief = dot(belief_array, atoms)
+        self.belief_atoms = belief_atoms
+        # self.resultant_belief = dot(belief_array, atoms) 
         self.decision_class = numpy.random.choice(possible_decisions)
-        self.expertise_class = numpy.random.choice(possible_decisions)
+        self.beliefdecision = beliefdecision
         self.expertise = numpy.random.choice(numpy.arange(0, 1, 0.01))
-        self.influence = numpy.random.choice(numpy.arange(0, 1, 0.01))
+        self.influence = numpy.random.choice(numpy.arange(0, 1, 0.01)) 
         self.ground_truth = ground_truth
+        self.beliefconfidence = beliefconfidence
         # print("Doctor agent initialized")
 
     def step(self):

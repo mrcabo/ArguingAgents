@@ -1,5 +1,6 @@
 from functools import partial
 import numpy
+from itertools import combinations
 
 from mesa import Model
 from mesa.time import RandomActivation
@@ -45,6 +46,12 @@ class MedicalModel(Model):
         # that is probability of each symptom being right
 
         atoms = [numpy.random.choice(numpy.arange(0, 1, 0.01)) for x in range(5)]
+        
+        #Extract the belief_array from combinations of the atoms
+        atom_combinations = list(combinations(atoms,3)) 
+        Combination_sums = [sum(x) for x in atom_combinations]
+        
+
         possible_decisions = [0, 1, 2]
 
         # actual ground truth of the diagnosis
@@ -56,8 +63,19 @@ class MedicalModel(Model):
         for agent in range(self.num_agents):
             # belief array is randomly generated for each each
             # represents likeliness of an agent to believe a given atom
-            belief_array = [numpy.random.choice(numpy.arange(0, 1, 0.01)) for x in range(5)]
-            doctor = DoctorAgent(agent, self, belief_array, possible_decisions, atoms, ground_truth)
+            belief = numpy.random.choice(Combination_sums)
+            beliefidx = combination_sums.index(belief)
+            belief_atoms = list(atom_combinations[beliefidx])
+            beliefdecision = numpy.round(belief)
+            beliefconfidence = [numpy.random.choice(numpy.arange(0, 1, 0.01)) for x in range(len(possible_decisions))] 
+
+            maxidx = beliefconfidence.index(max(beliefconfidence))
+            decisionidx = possible_decisions.index(beliefdecision)
+            beliefconfidence[decisionidx], beliefconfidence[maxidx] = beliefconfidence[maxidx],beliefconfidence[decisionidx]
+            
+            # belief_array = [numpy.random.choice(numpy.arange(0, 1, 0.01)) for x in range(5)]
+            doctor = DoctorAgent(agent, self, belief_atoms, beliefdecision, beliefconfidence, possible_decisions, atoms, ground_truth)
+
             self.schedule.add(doctor)
 
         # Create dictionary where avg_belief will be tracked for each argument
