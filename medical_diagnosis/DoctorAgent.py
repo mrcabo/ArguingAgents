@@ -69,9 +69,6 @@ def update_influence(self):
     Step 1: if there is one with a higher expertise, then
     """
     doctors = self.model.schedule.agents
-    doctor_beliefs = [[doc.beliefconfidence] for doc in doctors]
-    doctor_influences = [doc.influence for doc in doctors]
-    doctor_expertise = [doc.expertise for doc in doctors]
     doctor_beliefdecisions = [doc.beliefdecision for doc in doctors]
     """
     For 
@@ -79,34 +76,24 @@ def update_influence(self):
 
     # step 1: which of the doctors have the same decision as the ground truth
     same_decision = doctor_beliefdecisions.index(doctor_beliefdecisions[doctor_beliefdecisions == self.ground_truth])
-    if not same_decision:
-        #randomise the decisions - not sure yet
-        print("No expert decison matches the ground truth")
-    else:
-        #influence 
-        # for each correct expert, influence the others to reduce belief in the earlier decisions
-        which_idx  = self.possible_decisions.index(self.ground_truth)
-        for doc_idx in same_decision:
-            #get inifluence of doctor associated and influence the belief array
-            influe = doctors[doc_idx].influence 
-
-            # to update those with wrong decision
-            for x in range(doctor_beliefs):
-                if x != doc_idx:
-                    # decrease the confidence in other decisions
-                    for y in range(len(doctors[x].beliefconfidence)) :
-                        if y != which_idx:
-                            doctor[x][y] = 
-                                
-                    doctors[x].beliefconfidence = [ x if x != which_idx ]
-        pass
-
-
-   
-
-
-
-
+	which_idx  = self.possible_decisions.index(self.ground_truth)
+	doctorindices = list(range(len(doctors)))
+	
+	for doc_idx in doctorindices:
+	
+		if not same_decision:
+			#randomise the decisions - not sure yet what to do with no decisions same as the gorund truth
+			print("No expert decision matches the ground truth")
+		else:
+			# for each correct expert, influence the others to reduce belief in the earlier decisions
+			influe = doctors[doc_idx].influence 
+			
+			otherdoctors = [x for x in doctorindices if x != doc_idx]
+			for otherdoc in otherdoctors:
+				for belief_idx in range(len(self.possible_decisions)):
+					if (belief_idx != which_idx):
+						doctors[otherdoc].beliefconfidence[belief_idx] = doctors[otherdoc].beliefconfidence[belief_idx] * influe # this reduces the confidence in other diseases
+	
 
 class DoctorAgent(Agent):
     """
@@ -132,8 +119,8 @@ class DoctorAgent(Agent):
             atoms(array): array of symptoms with probability of certainity
             ground_truth: the actual decision
 
-            expertise_class(int): expert decision on what the disease is
-            expertise(float): certainity on their expertise
+            beliefdecision(int): expert decision on what the disease is
+            beliefconfidence(array): certainity on their decision
             decision_class(int): what the decision is in a given iteration
             resultant_belief: ?
 
