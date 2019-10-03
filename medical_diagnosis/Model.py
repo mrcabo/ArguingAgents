@@ -153,22 +153,29 @@ class MedicalModel(Model):
         publish__belief_arrays(self)
 
         # placeholder = [1. for x in range(5)]
+        committee_summary = [0. for x in range(5)]
         for doctor in self.schedule.agents:
             # placeholder *= numpy.multiply(placeholder, doctor.belief_array)
-            placeholder += numpy.multiply([1. for x in range(5)], doctor.belief_array)
+            # taking in consideration both certainties and uncertainties
+            # we consider values under 0.5 as a doctor's uncertainty in an arguments
+            # hence it will negatively affect the committee belief array summary
+            # ref: a more detailed discussion has been added in the report
+            placeholder = [-x if x < 0.5 else x for x in doctor.belief_array]
+            #print('placeholder: ', placeholder)
+            committee_summary = [sum(x) for x in zip(committee_summary, placeholder)]
 
-        probabilities = softmax(placeholder)
-        print('placeholder array: ', softmax(placeholder))
-        print('zika array: ', self.ZIKA_ARRAY)
-        print('chikv array: ', self.CHIKV_ARRAY)
+        probabilities = softmax(committee_summary)
+        print('softmax: ', probabilities)
+        # print('zika array: ', self.ZIKA_ARRAY)
+        # print('chikv array: ', self.CHIKV_ARRAY)
 
-        odds_zika = sum(numpy.multiply(self.ZIKA_ARRAY, probabilities))/sum(probabilities)
-        odds_chikv = sum(numpy.multiply(self.CHIKV_ARRAY, probabilities))/sum(probabilities)
+        probability_zika = sum(numpy.multiply(self.ZIKA_ARRAY, probabilities))/sum(probabilities)
+        probability_chikv = sum(numpy.multiply(self.CHIKV_ARRAY, probabilities))/sum(probabilities)
 
-        print('odds zika: ', "{0:.2f}".format(round(odds_zika, 2)))
-        print('odds chikv: ', "{0:.2f}".format(round(odds_chikv, 2)))
+        print('odds zika: ', "{0:.2f}".format(round(probability_zika, 2)))
+        print('odds chikv: ', "{0:.2f}".format(round(probability_chikv, 2)))
 
-        if odds_zika > odds_chikv:
+        if probability_zika > probability_chikv:
             print(self.LIST_OF_DISEASES['X'])
         else:
             print(self.LIST_OF_DISEASES['Y'])
