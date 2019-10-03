@@ -29,6 +29,15 @@ def calculate_avg_belief(idx, model):
     return avg
 
 
+def random_belief_array():
+    return [numpy.random.choice(numpy.arange(0.1, 1, 0.1)) for x in range(5)]
+
+
+def softmax(x):
+    e_x = numpy.exp(x - numpy.max(x))
+    return e_x / e_x.sum(axis=0)
+
+
 def get_belief_val(idx, agent):
     return agent.belief_array[idx]
 
@@ -56,8 +65,10 @@ class MedicalModel(Model):
                               "in the early stages of infection is 88.3%."}
 
     LIST_OF_DISEASES = {"X": "He has Zika",
-                        "Y": "He has Chikungunya",
-                        "Z": "He has Dengue"}
+                        "Y": "He has Chikungunya"}
+
+    ZIKA_ARRAY = [1., 0., 1., 0., 0.]
+    CHIKV_ARRAY = [0., 1., 0., 1., 1.]
 
     def __init__(self, N=3, n_init_arg=5, default_case=True):
         self.num_agents = N
@@ -75,14 +86,19 @@ class MedicalModel(Model):
                 print("Sorry, the default case only works with 3 doctors and 5 initial arguments")
                 exit()
             ground_truth = "X"  # The ground truth for this particular diagnosis (real disease)
-            belief_array = [[0.75, 0.30, 0.80, 0.50, 0.50],
-                            [0.80, 0.50, 0.70, 0.40, 0.50],
-                            [0.40, 0.90, 0.55, 0.75, 0.98]]
+            # belief_array = [[0.45, 0.30, 0.30, 0.50, 0.50],
+            #                 [0.50, 0.50, 0.30, 0.40, 0.50],
+            #                 [0.50, 0.50, 0.30, 0.45, 0.48]]
+
+            belief_array = [random_belief_array() for x in range(3)]
+
             for i in range(self.num_agents):
                 doctor = DoctorAgent(i, self, belief_array[i])
-                if i == 2:
-                    doctor.influence = 0.7
-                    doctor.stubbornness = 0.6
+                doctor.influence = random_belief_array()[0]
+                doctor.stubbornness = random_belief_array()[0]
+                # if i == 2:
+                #     doctor.influence = 0.7
+                #     doctor.stubbornness = 0.6
                 self.schedule.add(doctor)
             self.argumentation_text += "<h1>Starting simulation for the default case.</h1><br>The initial set of " \
                                        "arguments is the following:<br>"
@@ -102,7 +118,7 @@ class MedicalModel(Model):
             for agent in range(self.num_agents):
                 # belief array is randomly generated for each each
                 # represents likeliness of an agent to believe a given atom
-                belief_array = [numpy.random.choice(numpy.arange(0, 1, 0.01)) for x in range(5)]
+                belief_array = [numpy.random.choice(numpy.arange(0, 1, 0.1)) for x in range(5)]
                 doctor = DoctorAgent(agent, self, belief_array, possible_decisions, atoms, ground_truth)
                 self.schedule.add(doctor)
 
@@ -135,6 +151,27 @@ class MedicalModel(Model):
         self.argumentation_text += "Beginning of argumentation round..<br>Doctor belief arrays before " \
                                    "argumentation:<br>"
         publish__belief_arrays(self)
+
+        # placeholder = [1. for x in range(5)]
+        for doctor in self.schedule.agents:
+            # placeholder *= numpy.multiply(placeholder, doctor.belief_array)
+            placeholder += numpy.multiply([1. for x in range(5)], doctor.belief_array)
+
+        probabilities = softmax(placeholder)
+        print('placeholder array: ', softmax(placeholder))
+        print('zika array: ', self.ZIKA_ARRAY)
+        print('chikv array: ', self.CHIKV_ARRAY)
+
+        odds_zika = sum(numpy.multiply(self.ZIKA_ARRAY, probabilities))/sum(probabilities)
+        odds_chikv = sum(numpy.multiply(self.CHIKV_ARRAY, probabilities))/sum(probabilities)
+
+        print('odds zika: ', "{0:.2f}".format(round(odds_zika, 2)))
+        print('odds chikv: ', "{0:.2f}".format(round(odds_chikv, 2)))
+
+        if odds_zika > odds_chikv:
+            print(self.LIST_OF_DISEASES['X'])
+        else:
+            print(self.LIST_OF_DISEASES['Y'])
 
         self.schedule.step()
         self.argumentation_text += "Doctor belief arrays after argumentation:<br>"
