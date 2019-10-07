@@ -30,6 +30,8 @@ def calculate_avg_belief(idx, model):
 
 
 def random_belief_array():
+    # TODO the range is fixed. number of arguments is a parameter that can be changed (will be useful for the batch
+    #  runs)
     return [numpy.random.choice(numpy.arange(0.1, 1, 0.1)) for x in range(5)]
 
 
@@ -67,6 +69,8 @@ class MedicalModel(Model):
     LIST_OF_DISEASES = {"X": "He has Zika",
                         "Y": "He has Chikungunya"}
 
+    # TODO: this should be initialized inside the model. For batch they could be randomized with different weights,
+    #  for default case they should be hard coded, also with different weights e.g. arg E bigger weight
     ZIKA_ARRAY = [1., 0., 1., 0., 0.]
     CHIKV_ARRAY = [0., 1., 0., 1., 1.]
 
@@ -86,6 +90,7 @@ class MedicalModel(Model):
                 print("Sorry, the default case only works with 3 doctors and 5 initial arguments")
                 exit()
             ground_truth = "X"  # The ground truth for this particular diagnosis (real disease)
+            # TODO: this should be fixed for the default case. For the batch is when it should be randomized
             # belief_array = [[0.45, 0.30, 0.30, 0.50, 0.50],
             #                 [0.50, 0.50, 0.30, 0.40, 0.50],
             #                 [0.50, 0.50, 0.30, 0.45, 0.48]]
@@ -94,6 +99,7 @@ class MedicalModel(Model):
 
             for i in range(self.num_agents):
                 doctor = DoctorAgent(i, self, belief_array[i])
+                # TODO: again, hardcoded for default case, random for batch runs..
                 doctor.influence = random_belief_array()[0]
                 doctor.stubbornness = random_belief_array()[0]
                 # if i == 2:
