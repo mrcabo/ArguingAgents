@@ -1,4 +1,5 @@
 import argparse
+import logging
 
 from medical_diagnosis.Model import MedicalModel
 from medical_diagnosis.server import ServerClass
@@ -19,6 +20,19 @@ def parse_arguments():
 
 
 if __name__ == '__main__':
+    # create logger with 'medical_diagnosis'
+    logger = logging.getLogger('medical_diagnosis')
+    logger.setLevel(logging.DEBUG)
+    # create file handler which logs even debug messages
+    fh = logging.FileHandler('output.log', mode='w')
+    fh.setLevel(logging.DEBUG)
+    # formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+    formatter = logging.Formatter('%(asctime)s - %(message)s', datefmt='%I:%M:%S %p')
+    fh.setFormatter(formatter)
+    logger.addHandler(fh)
+
+    logger.debug("Initiating Simulation")
+
     arguments = parse_arguments()
     batch, n_doctors, n_init_arg, default_case = arguments
     if batch:

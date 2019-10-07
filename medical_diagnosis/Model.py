@@ -1,4 +1,6 @@
 from functools import partial
+import logging
+
 import numpy
 
 from mesa import Model
@@ -10,6 +12,8 @@ from medical_diagnosis.DoctorAgent import DoctorAgent
 ARGUMENT_NAMES = ('A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J')
 COLORS = ('#00FF00', '#FF0000', '#0000FF', '#383B38', '#FF00FF',
           '#8000FF', '#FF7F00', '#F6F90E', '#6E1122', '#3B541F')
+
+logger = logging.getLogger('medical_diagnosis')
 
 
 def calculate_avg_belief(idx, model):
@@ -106,6 +110,7 @@ class MedicalModel(Model):
                 #     doctor.influence = 0.7
                 #     doctor.stubbornness = 0.6
                 self.schedule.add(doctor)
+            logger.info("Starting simulation for the default case. The initial set of arguments is the following:")
             self.argumentation_text += "<h1>Starting simulation for the default case.</h1><br>The initial set of " \
                                        "arguments is the following:<br>"
             for arg_name, arg_idx in self.LIST_OF_ARGUMENTS.items():
@@ -153,6 +158,8 @@ class MedicalModel(Model):
             Randomly initialize doctors and print out ensemble decision,
             based on initial belief vectors and atom probabilities
         """
+        logger.info('-'*40)
+        logger.info("Beginning of argumentation round..Doctor belief arrays before argumentation:")
         self.argumentation_text += '-' * 40 + "<br>"
         self.argumentation_text += "Beginning of argumentation round..<br>Doctor belief arrays before " \
                                    "argumentation:<br>"
