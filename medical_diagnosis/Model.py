@@ -48,10 +48,10 @@ def get_belief_val(idx, agent):
     return agent.belief_array[idx]
 
 
-def publish__belief_arrays(model):
+def log_belief_arrays(model):
     for doctor in model.schedule.agents:
-        text = "--<b>Doctor {}</b>: {}".format(doctor._doctor_id, doctor.belief_array)
-        model.argumentation_text += text + "<br>"
+        text = "Doctor {}: {}".format(doctor._doctor_id, numpy.round(doctor.belief_array, 2))
+        logger.info(text)
 
 
 class MedicalModel(Model):
@@ -70,8 +70,8 @@ class MedicalModel(Model):
                          "E": "RT-PCR test results came positive. The sensitivity of this test for CHIKV (Chikungunya) "
                               "in the early stages of infection is 88.3%."}
 
-    LIST_OF_DISEASES = {"X": "He has Zika",
-                        "Y": "He has Chikungunya"}
+    LIST_OF_DISEASES = {"X": "Zika",
+                        "Y": "Chikungunya"}
 
     # TODO: this should be initialized inside the model. For batch they could be randomized with different weights,
     #  for default case they should be hard coded, also with different weights e.g. arg E bigger weight
@@ -84,6 +84,7 @@ class MedicalModel(Model):
         self.ground_truth = "Y"  # hardcoded for now..
         self.default_case = default_case
         self.argumentation_text = ""
+        self.diagnosis_text = ""
         # if self.default_case:
         #     self.schedule = BaseScheduler(self)  # For now so they speak in order..
         # else:
@@ -158,12 +159,13 @@ class MedicalModel(Model):
             Randomly initialize doctors and print out ensemble decision,
             based on initial belief vectors and atom probabilities
         """
-        logger.info('-'*40)
-        logger.info("Beginning of argumentation round..Doctor belief arrays before argumentation:")
-        self.argumentation_text += '-' * 40 + "<br>"
-        self.argumentation_text += "Beginning of argumentation round..<br>Doctor belief arrays before " \
-                                   "argumentation:<br>"
-        publish__belief_arrays(self)
+        logger.info('-' * 40)
+        logger.info("Beginning of a new argumentation round. Doctor belief arrays before argumentation are:")
+        log_belief_arrays(self)
+
+        self.schedule.step()
+        logger.info("Doctor belief arrays after argumentation:")
+        log_belief_arrays(self)
 
         # placeholder = [1. for x in range(5)]
         committee_summary = [0. for x in range(5)]
@@ -174,7 +176,7 @@ class MedicalModel(Model):
             # hence it will negatively affect the committee belief array summary
             # ref: a more detailed discussion has been added in the report
             placeholder = [-x if x < 0.5 else x for x in doctor.belief_array]
-            #print('placeholder: ', placeholder)
+            # print('placeholder: ', placeholder)
             committee_summary = [sum(x) for x in zip(committee_summary, placeholder)]
 
         probabilities = softmax(committee_summary)
@@ -182,25 +184,16 @@ class MedicalModel(Model):
         # print('zika array: ', self.ZIKA_ARRAY)
         # print('chikv array: ', self.CHIKV_ARRAY)
 
-        probability_zika = sum(numpy.multiply(self.ZIKA_ARRAY, probabilities))/sum(probabilities)
-        probability_chikv = sum(numpy.multiply(self.CHIKV_ARRAY, probabilities))/sum(probabilities)
+        probability_zika = sum(numpy.multiply(self.ZIKA_ARRAY, probabilities)) / sum(probabilities)
+        probability_chikv = sum(numpy.multiply(self.CHIKV_ARRAY, probabilities)) / sum(probabilities)
 
-        print('odds zika: ', "{0:.2f}".format(round(probability_zika, 2)))
-        print('odds chikv: ', "{0:.2f}".format(round(probability_chikv, 2)))
+        logger.info("Probability for the diagnosis being {} is: {}".format(self.LIST_OF_DISEASES['X'],
+                                                                           round(probability_zika, 2)))
+        logger.info("Probability for the diagnosis being {} is: {}".format(self.LIST_OF_DISEASES['Y'],
+                                                                           round(probability_chikv, 2)))
 
-        if probability_zika > probability_chikv:
-            print(self.LIST_OF_DISEASES['X'])
-        else:
-            print(self.LIST_OF_DISEASES['Y'])
-
-        self.schedule.step()
-        self.argumentation_text += "Doctor belief arrays after argumentation:<br>"
-        publish__belief_arrays(self)
-
-        # print("\n\n")
-        # print("Doctor belief arrays after argumentation \n\n")
-        # doctors = self.schedule.agents
-        # for doctor in doctors:
-        #     print(doctor.belief_array)
+        disease = self.LIST_OF_DISEASES['X'] if probability_zika > probability_chikv else self.LIST_OF_DISEASES['Y']
+        self.diagnosis_text = "The diagnosis for the patient is: {}.".format(disease)
+        logger.info(self.diagnosis_text)
 
         self.datacollector.collect(self)

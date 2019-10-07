@@ -20,6 +20,19 @@ class PrintedArgumentationElement(TextElement):
         return text
 
 
+class PrintedDiagnosis(TextElement):
+    """
+    Displays the argumentation process
+    """
+
+    def __init__(self):
+        pass
+
+    def render(self, model):
+        text = model.diagnosis_text
+        return text
+
+
 class PrintedBeliefArray(TextElement):
     """
     Displays the argumentation process
@@ -72,13 +85,14 @@ class ServerClass:
         bar_chart = BarChartModule(list, scope="agent")
 
         printed_arguments = PrintedArgumentationElement()
+        diagnosis = PrintedDiagnosis()
 
         title = LegendElement("<h1>Welcome to our simulation</h1>")
         legend_1 = LegendElement("The graph below represents the average belief between all doctors for each of the  "
                                  "possible arguments")
         legend_2 = LegendElement("The graph below displays the belief array for each of the doctors (e.g. Doctor 0, "
                                  "Doctor 1..)")
-        list_of_visualizations = [title, legend_2, bar_chart, legend_1, line_chart, printed_arguments]
+        list_of_visualizations = [title, legend_2, bar_chart, legend_1, line_chart, printed_arguments, diagnosis]
 
         # Create server
         self.server = ModularServer(MedicalModel, list_of_visualizations, "Evacuation model", model_params)
