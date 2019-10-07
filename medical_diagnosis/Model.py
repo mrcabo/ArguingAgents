@@ -48,6 +48,10 @@ def get_belief_val(idx, agent):
     return agent.belief_array[idx]
 
 
+def get_diagnosis_probabilities(idx, model):
+    return model.diagnosis_probabilities[idx]
+
+
 def log_belief_arrays(model):
     for doctor in model.schedule.agents:
         text = "Doctor {}: {}".format(doctor._doctor_id, numpy.round(doctor.belief_array, 2))
@@ -85,6 +89,8 @@ class MedicalModel(Model):
         self.default_case = default_case
         self.argumentation_text = ""
         self.diagnosis_text = ""
+        # TODO:maybe calculate the diagnosis_probabilities before sending the to the collector, os it doesn't start at 0
+        self.diagnosis_probabilities = numpy.zeros(len(self.LIST_OF_DISEASES)).tolist()
         # if self.default_case:
         #     self.schedule = BaseScheduler(self)  # For now so they speak in order..
         # else:
@@ -138,6 +144,10 @@ class MedicalModel(Model):
         for i in range(self.n_initial_arguments):
             avg_belief = partial(calculate_avg_belief, i)
             dict_model_collector[ARGUMENT_NAMES[i]] = avg_belief
+        # Create dictionary where the diagnosis probabilities will be tracked
+        for i, disease in enumerate(self.LIST_OF_DISEASES.values()):
+            disease_prob = partial(get_diagnosis_probabilities, i)
+            dict_model_collector[disease] = disease_prob
         # Create dictionary where the belief array of each agent will be tracked
         belief_array_collector = {}
         for arg_idx in range(self.n_initial_arguments):
@@ -185,6 +195,10 @@ class MedicalModel(Model):
 
         probability_zika = sum(numpy.multiply(self.ZIKA_ARRAY, probabilities)) / sum(probabilities)
         probability_chikv = sum(numpy.multiply(self.CHIKV_ARRAY, probabilities)) / sum(probabilities)
+
+        # TODO: this is a bit hard coded. it should be done better so it accepts different number of conclusions
+        self.diagnosis_probabilities[0] = probability_zika
+        self.diagnosis_probabilities[1] = probability_chikv
 
         logger.info("Probability for the diagnosis being {} is: {}".format(self.LIST_OF_DISEASES['X'],
                                                                            round(probability_zika, 2)))

@@ -66,33 +66,43 @@ class ServerClass:
         self.n_init_arg = n_init_arg
 
         model_params = {
-            "N": UserSettableParameter('slider', "Number of agents", n_doctors, 2, 10, 1,
-                                       description="Choose how many agents to include in the model"),
+            # "N": UserSettableParameter('slider', "Number of agents", n_doctors, 2, 10, 1,
+            #                            description="Choose how many agents to include in the model"),
+            "N": n_doctors,
             "n_init_arg": n_init_arg,
             "default_case": default_case
         }
         # Create a line chart tracking avg_belief for all the initial arguments
-        list = []
+        list_var = []
         for i in range(self.n_init_arg):
             dict = {"Label": ARGUMENT_NAMES[i], "Color": COLORS[i]}
-            list.append(dict)
-        line_chart = ChartModule(list)
+            list_var.append(dict)
+        avg_belief_line_chart = ChartModule(list_var)
 
-        list = []
+        list_var = []
+        for i, disease in enumerate(MedicalModel.LIST_OF_DISEASES.values()):
+            dict = {"Label": disease, "Color": COLORS[i]}
+            list_var.append(dict)
+        disease_line_chart = ChartModule(list_var)
+
+        list_var = []
         for i in range(self.n_init_arg):
             dict = {"Label": ARGUMENT_NAMES[i], "Color": COLORS[i]}
-            list.append(dict)
-        bar_chart = BarChartModule(list, scope="agent")
+            list_var.append(dict)
+        bar_chart = BarChartModule(list_var, scope="agent")
 
         printed_arguments = PrintedArgumentationElement()
         diagnosis = PrintedDiagnosis()
 
         title = LegendElement("<h1>Welcome to our simulation</h1>")
-        legend_1 = LegendElement("The graph below represents the average belief between all doctors for each of the  "
-                                 "possible arguments")
-        legend_2 = LegendElement("The graph below displays the belief array for each of the doctors (e.g. Doctor 0, "
-                                 "Doctor 1..)")
-        list_of_visualizations = [title, legend_2, bar_chart, legend_1, line_chart, printed_arguments, diagnosis]
+        legend_avg_belief = LegendElement("The graph below represents the average belief between all doctors for each "
+                                          "of the possible arguments")
+        legend_belief_array = LegendElement("The graph below displays the belief array for each of the doctors (e.g. "
+                                            "Doctor 0, Doctor 1..)")
+        # TODO: explain this legend more accurately
+        legend_conclusion = LegendElement("The graph below displays the probability in the conclusion.")
+        list_of_visualizations = [title, legend_belief_array, bar_chart, legend_conclusion, disease_line_chart,
+                                  legend_avg_belief, avg_belief_line_chart, printed_arguments, diagnosis]
 
         # Create server
         self.server = ModularServer(MedicalModel, list_of_visualizations, "Evacuation model", model_params)
