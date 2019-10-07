@@ -105,25 +105,27 @@ def default_case_influencing(agent):
     logger.info("Doctor {} speaks now, trying to influence the other doctors".format(agent.unique_id))
 
     agent_conv_array = transform_convincing_value(agent.belief_array)  # A'
-    for doctor in agent.model.schedule.agents:
-        if doctor != agent:
-            doctor_conv_array = transform_convincing_value(doctor.belief_array)  # B'
+    for colleague in agent.model.schedule.agents:
+        if colleague != agent:
+            colleague_conv_array = transform_convincing_value(colleague.belief_array)  # B'
             signs_agent = numpy.sign(agent_conv_array)
-            signs_vector = numpy.sign(agent_conv_array - doctor_conv_array)  # (A' - B')
+            signs_vector = numpy.sign(agent_conv_array - colleague_conv_array)  # (A' - B')
             for arg_idx, _ in enumerate(agent.belief_array):  # Loop over every argument
                 # Can't influence others with higher beliefs in that argument
                 if signs_vector[arg_idx] == signs_agent[arg_idx]:
                     alpha = 0.25  # constant parameter to better simulate a real speed for convincing other people
-                    eta = agent.influence * (1 - doctor.stubbornness) * alpha  # Regulates the influence
+                    eta = agent.influence * (1 - colleague.stubbornness) * alpha  # Regulates the influence
                     delta_belief = eta * agent_conv_array[arg_idx]
                     # An agent can only influence up to the same level of uncertainty that he has. So we limit it in
                     # case the update step becomes too big
-                    if abs(agent_conv_array[arg_idx]) > abs(doctor_conv_array[arg_idx] + delta_belief):
-                        new_val = doctor_conv_array[arg_idx] + delta_belief
+                    if (signs_agent[arg_idx] * agent_conv_array[arg_idx]) > (
+                            signs_agent[arg_idx] * (colleague_conv_array[arg_idx] + delta_belief)):
+                        new_val = colleague_conv_array[arg_idx] + delta_belief
                     else:
                         new_val = agent_conv_array[arg_idx]
-                    doctor_conv_array[arg_idx] = new_val
-            doctor.belief_array = transform_convincing_value(doctor_conv_array, inv=True)  # Convert B' back to B
+
+                    colleague_conv_array[arg_idx] = new_val
+            colleague.belief_array = transform_convincing_value(colleague_conv_array, inv=True)  # Convert B' back to B
 
 
 class DoctorAgent(Agent):
