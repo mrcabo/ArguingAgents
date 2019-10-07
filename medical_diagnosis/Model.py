@@ -96,21 +96,20 @@ class MedicalModel(Model):
                 exit()
             ground_truth = "X"  # The ground truth for this particular diagnosis (real disease)
             # TODO: this should be fixed for the default case. For the batch is when it should be randomized
-            # belief_array = [[0.45, 0.30, 0.30, 0.50, 0.50],
-            #                 [0.50, 0.50, 0.30, 0.40, 0.50],
-            #                 [0.50, 0.50, 0.30, 0.45, 0.48]]
-
-            belief_array = [random_belief_array() for x in range(3)]
+            belief_array = [[0.75, 0.30, 0.80, 0.50, 0.50],
+                            [0.80, 0.50, 0.70, 0.40, 0.50],
+                            [0.40, 0.90, 0.55, 0.75, 0.98]]
 
             for i in range(self.num_agents):
                 doctor = DoctorAgent(i, self, belief_array[i])
                 # TODO: again, hardcoded for default case, random for batch runs..
-                doctor.influence = random_belief_array()[0]
-                doctor.stubbornness = random_belief_array()[0]
-                # if i == 2:
-                #     doctor.influence = 0.7
-                #     doctor.stubbornness = 0.6
+                doctor.influence = 0.5
+                doctor.stubbornness = 0.5
+                if i == 2:
+                    doctor.influence = 0.7
+                    doctor.stubbornness = 0.6
                 self.schedule.add(doctor)
+
             logger.info("Starting simulation for the default case. The initial set of arguments is the following:")
             self.argumentation_text += "<h1>Starting simulation for the default case.</h1><br>The initial set of " \
                                        "arguments is the following:<br>"
