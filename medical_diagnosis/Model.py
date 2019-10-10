@@ -38,6 +38,8 @@ def random_belief_array():
     #  runs)
     return [numpy.random.choice(numpy.arange(0.1, 1, 0.1)) for x in range(5)]
 
+def random_influence():
+    return numpy.random.choice(numpy.arange(0, 1, 0.01))
 
 def softmax(x):
     e_x = numpy.exp(x - numpy.max(x))
@@ -82,11 +84,11 @@ class MedicalModel(Model):
     ZIKA_ARRAY = [1., 0., 1., 0., 0.]
     CHIKV_ARRAY = [0., 1., 0., 1., 1.]
 
-    def __init__(self, N=3, n_init_arg=5, default_case=True):
+    def __init__(self, N=3, n_init_arg=5, experiment_case):
         self.num_agents = N
         self.n_initial_arguments = n_init_arg  # Number of initial arguments that doctors will consider
         self.ground_truth = "Y"  # hardcoded for now..
-        self.default_case = default_case
+        self.experiment_case = experiment_case
         self.argumentation_text = ""
         self.diagnosis_text = ""
         # TODO:maybe calculate the diagnosis_probabilities before sending the to the collector, os it doesn't start at 0
@@ -96,7 +98,7 @@ class MedicalModel(Model):
         # else:
         self.schedule = RandomActivation(self)  # Every tick, agents move in a different random order
 
-        if self.default_case:
+        if self.experiment_case == 1: #default case
             if (self.num_agents != 3) or (self.n_initial_arguments != 5):
                 print("Sorry, the default case only works with 3 doctors and 5 initial arguments")
                 exit()
@@ -114,6 +116,31 @@ class MedicalModel(Model):
                 if i == 2:
                     doctor.influence = 0.7
                     doctor.stubbornness = 0.6
+                self.schedule.add(doctor)
+
+            logger.info("Starting simulation for the default case. The initial set of arguments is the following:")
+            self.argumentation_text += "<h1>Starting simulation for the default case.</h1><br>The initial set of " \
+                                       "arguments is the following:<br>"
+            for arg_name, arg_idx in self.LIST_OF_ARGUMENTS.items():
+                self.argumentation_text += "<b>" + arg_name + "</b>" + ": " + arg_idx + "<br>"
+
+        elif self.experiment_case == 2: #Batch run case
+            
+            if (self.num_agents != 3) or (self.n_initial_arguments != 5):
+                print("Sorry, the default case only works with 3 doctors and 5 initial arguments")
+                exit()
+            ground_truth = "X"  # The ground truth for this particular diagnosis (real disease)
+            # TODO: this should be fixed for the default case. For the batch is when it should be randomized
+            belief_array = [random_belief_array() for i in range(self.num_agents)]
+
+            for i in range(self.num_agents):
+                doctor = DoctorAgent(i, self, belief_array[i])
+                # TODO: again, hardcoded for default case, random for batch runs..
+                doctor.influence = random_influence()
+                doctor.stubbornness = random_influence()
+                if i == 2:
+                    doctor.influence = random_influence()
+                    doctor.stubbornness = random_influence()
                 self.schedule.add(doctor)
 
             logger.info("Starting simulation for the default case. The initial set of arguments is the following:")
