@@ -7,8 +7,8 @@ from mesa.batchrunner import BatchRunner
 
 def parse_arguments():
     parser = argparse.ArgumentParser(description='Simulates argumentation between several doctors')
-    parser.add_argument('--batch', type=bool, default=False,
-                        help='Run a batch of examples to get statistics.')
+    # parser.add_argument('--batch', type=bool, default=False,
+    #                     help='Run a batch of examples to get statistics.')
     parser.add_argument('--n_doctors', type=int, default=3,
                         help='Number of doctors.')
     parser.add_argument('--n_init_arg', type=int, default=5,
@@ -16,7 +16,8 @@ def parse_arguments():
     parser.add_argument('--experiment_case', type=int, default=1,
                         help='Use the default case instead of random beliefs in arguments.')
     args = parser.parse_args()
-    return args.batch, args.n_doctors, args.n_init_arg, args.experiment_case
+    print(str(args))
+    return args.n_doctors, args.n_init_arg, args.experiment_case
 
 
 if __name__ == '__main__':
@@ -37,20 +38,22 @@ if __name__ == '__main__':
     n_doctors, n_init_arg, experiment_case = arguments
     if experiment_case == 2: #Batch run
         fixed_params = {
-            "n_init_arg": n_init_arg
-            "N": n_doctors,
+            "n_init_arg": n_init_arg,
+            
             "experiment_case": 2
+        }
+        variable_params ={
+            "N": [n_doctors]
         }
         batch_run = BatchRunner(
                 MedicalModel,
                 variable_params,
                 fixed_params,
                 iterations=5,
-                max_steps=100,
-                model_reporters={"Gini": compute_gini}
+                max_steps=100
             )
 
-            batch_run.run_all()
+        batch_run.run_all()
     else:
         server = ServerClass(n_doctors, n_init_arg, experiment_case)
         server.server.launch()
