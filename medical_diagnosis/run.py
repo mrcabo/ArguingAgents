@@ -54,6 +54,8 @@ if __name__ == '__main__':
             )
 
         batch_run.run_all()
+
+        run_data = batch_run.get_model_vars_dataframe()
     else:
         server = ServerClass(n_doctors, n_init_arg, experiment_case)
         server.server.launch()
