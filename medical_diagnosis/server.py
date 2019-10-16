@@ -99,5 +99,5 @@ class ServerClass:
             "experiment_case": experiment_case
         }
         # Create server
-        self.server = ModularServer(MedicalModel, list_of_visualizations, "Evacuation model", model_params)
+        self.server = ModularServer(MedicalModel, list_of_visualizations, "ABM medical diagnosis", model_params)
         self.server.port = 8521
