@@ -3,20 +3,21 @@ import logging
 
 from medical_diagnosis.Model import MedicalModel
 from medical_diagnosis.server import ServerClass
-
+from mesa.batchrunner import BatchRunner
 
 def parse_arguments():
     parser = argparse.ArgumentParser(description='Simulates argumentation between several doctors')
-    parser.add_argument('--batch', type=bool, default=False,
-                        help='Run a batch of examples to get statistics.')
+    # parser.add_argument('--batch', type=bool, default=False,
+    #                     help='Run a batch of examples to get statistics.')
     parser.add_argument('--n_doctors', type=int, default=3,
                         help='Number of doctors.')
     parser.add_argument('--n_init_arg', type=int, default=5,
                         help='Number of initial arguments.')
-    parser.add_argument('--default_case', type=bool, default=True,
+    parser.add_argument('--experiment_case', type=int, default=1,
                         help='Use the default case instead of random beliefs in arguments.')
     args = parser.parse_args()
-    return args.batch, args.n_doctors, args.n_init_arg, args.default_case
+    print(str(args))
+    return args.n_doctors, args.n_init_arg, args.experiment_case
 
 
 if __name__ == '__main__':
@@ -34,16 +35,27 @@ if __name__ == '__main__':
     logger.debug("Initiating Simulation")
 
     arguments = parse_arguments()
-    batch, n_doctors, n_init_arg, default_case = arguments
-    if batch:
-        model = MedicalModel(n_doctors, n_init_arg, default_case)
+    n_doctors, n_init_arg, experiment_case = arguments
+    if experiment_case == 2: #Batch run
+        fixed_params = {
+            "n_init_arg": n_init_arg,
+            
+            "experiment_case": 2
+        }
+        variable_params ={
+            "N": [n_doctors]
+        }
+        batch_run = BatchRunner(
+                MedicalModel,
+                variable_params,
+                fixed_params,
+                iterations=5,
+                max_steps=100
+            )
 
-        step = 1
+        batch_run.run_all()
 
-        print('Initiation of round ' + str(step) + " of argumentation:\n\n")
-        model.step()
-        print("\n\n")
-        print('Conclusion of round ' + str(step) + " of argumentation\n\n")
+        run_data = batch_run.get_model_vars_dataframe()
     else:
-        server = ServerClass(n_doctors, n_init_arg, default_case)
+        server = ServerClass(n_doctors, n_init_arg, experiment_case)
         server.server.launch()

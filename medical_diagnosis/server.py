@@ -62,7 +62,7 @@ class LegendElement(TextElement):
 
 
 class ServerClass:
-    def __init__(self, n_doctors=3, n_init_arg=5, default_case=True):
+    def __init__(self, n_doctors=3, n_init_arg=5, experiment_case=1):
         self.n_init_arg = n_init_arg
 
         model_params = {
@@ -70,7 +70,7 @@ class ServerClass:
             #                            description="Choose how many agents to include in the model"),
             "N": n_doctors,
             "n_init_arg": n_init_arg,
-            "default_case": default_case
+            "experiment_case": 1
         }
         # Create a line chart tracking avg_belief for all the initial arguments
         list_var = []
