@@ -7,19 +7,6 @@ from mesa.visualization.UserParam import UserSettableParameter
 from medical_diagnosis.Model import MedicalModel, ARGUMENT_NAMES, COLORS
 
 
-class PrintedArgumentationElement(TextElement):
-    """
-    Displays the argumentation process
-    """
-
-    def __init__(self):
-        pass
-
-    def render(self, model):
-        text = model.argumentation_text
-        return text
-
-
 class PrintedDiagnosis(TextElement):
     """
     Displays the argumentation process
@@ -65,13 +52,6 @@ class ServerClass:
     def __init__(self, n_doctors=3, n_init_arg=5, experiment_case=1):
         self.n_init_arg = n_init_arg
 
-        model_params = {
-            # "N": UserSettableParameter('slider', "Number of agents", n_doctors, 2, 10, 1,
-            #                            description="Choose how many agents to include in the model"),
-            "N": n_doctors,
-            "n_init_arg": n_init_arg,
-            "experiment_case": 1
-        }
         # Create a line chart tracking avg_belief for all the initial arguments
         list_var = []
         for i in range(self.n_init_arg):
@@ -91,19 +71,33 @@ class ServerClass:
             list_var.append(dict)
         bar_chart = BarChartModule(list_var, scope="agent")
 
-        printed_arguments = PrintedArgumentationElement()
         diagnosis = PrintedDiagnosis()
 
-        title = LegendElement("<h1>Welcome to our simulation</h1>")
-        legend_avg_belief = LegendElement("The graph below represents the average belief between all doctors for each "
-                                          "of the possible arguments")
-        legend_belief_array = LegendElement("The graph below displays the belief array for each of the doctors (e.g. "
-                                            "Doctor 0, Doctor 1..)")
+        # title = LegendElement("<h1>Welcome to our simulation</h1>")
+        legend_belief_array = LegendElement('<font size="5"><b>1. </b></font> The graph below displays the belief '
+                                            'array for each of the doctors (e.g. Doctor 0, Doctor 1..)')
         # TODO: explain this legend more accurately
-        legend_conclusion = LegendElement("The graph below displays the probability in the conclusion.")
-        list_of_visualizations = [title, legend_belief_array, bar_chart, legend_conclusion, disease_line_chart,
-                                  legend_avg_belief, avg_belief_line_chart, printed_arguments, diagnosis]
+        legend_conclusion = LegendElement('<font size="5"><b>2. </b></font> The graph below displays the probability '
+                                          'of the committee in each conclusion.')
+        legend_avg_belief = LegendElement('The graph below represents the average belief between all doctors '
+                                          'for each of the possible arguments')
 
+        list_of_visualizations = [legend_belief_array, bar_chart, legend_conclusion, disease_line_chart, diagnosis,
+                                  legend_avg_belief, avg_belief_line_chart]
+        model_legend = ""
+        if experiment_case == 1:  # Default case
+            model_legend = """<h1>Default Case Scenario.</h1><br><h3>The initial set of arguments is the 
+            following:</h3><br>
+            """
+            for arg_name, arg_idx in MedicalModel.LIST_OF_ARGUMENTS.items():
+                model_legend += "<b>" + arg_name + "</b>" + ": " + arg_idx + "<br>"
+
+        model_params = {
+            "Legend": UserSettableParameter('static_text', value=model_legend),
+            "N": n_doctors,
+            "n_init_arg": n_init_arg,
+            "experiment_case": experiment_case
+        }
         # Create server
         self.server = ModularServer(MedicalModel, list_of_visualizations, "Evacuation model", model_params)
         self.server.port = 8521
