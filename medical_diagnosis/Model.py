@@ -56,6 +56,10 @@ def get_diagnosis_probabilities(idx, model):
     return model.diagnosis_probabilities[idx]
 
 
+def get_final_decision(model):
+    return model.final_decision
+
+
 def log_belief_arrays(model):
     for doctor in model.schedule.agents:
         text = "Doctor {}: {}".format(doctor._doctor_id, numpy.round(doctor.belief_array, 2))
@@ -89,11 +93,11 @@ class MedicalModel(Model):
     def __init__(self, N=3, n_init_arg=5, experiment_case=1):
         self.num_agents = N
         self.n_initial_arguments = n_init_arg  # Number of initial arguments that doctors will consider
-        self.ground_truth = "Y"  # hardcoded for now..
         self.experiment_case = experiment_case
         self.diagnosis_text = ""
         # TODO:maybe calculate the diagnosis_probabilities before sending the to the collector, os it doesn't start at 0
         self.diagnosis_probabilities = numpy.zeros(len(self.LIST_OF_DISEASES)).tolist()
+        self.final_decision = None
 
         self.schedule = RandomActivation(self)  # Every tick, agents move in a different random order
 
@@ -101,7 +105,6 @@ class MedicalModel(Model):
             if (self.num_agents != 3) or (self.n_initial_arguments != 5):
                 print("Sorry, the default case only works with 3 doctors and 5 initial arguments")
                 exit()
-            ground_truth = "X"  # The ground truth for this particular diagnosis (real disease)
             # TODO: this should be fixed for the default case. For the batch is when it should be randomized
             belief_array = [[0.75, 0.30, 0.80, 0.50, 0.50],
                             [0.80, 0.50, 0.70, 0.40, 0.50],
@@ -120,11 +123,6 @@ class MedicalModel(Model):
             logger.info("Starting simulation for the default case. The initial set of arguments is the following:")
 
         elif self.experiment_case == 2:  # Batch run case
-
-            if (self.num_agents != 3) or (self.n_initial_arguments != 5):
-                print("Sorry, the default case only works with 3 doctors and 5 initial arguments")
-                exit()
-            ground_truth = "X"  # The ground truth for this particular diagnosis (real disease)
             belief_array = [random_belief_array() for i in range(self.num_agents)]
 
             for i in range(self.num_agents):
@@ -132,10 +130,8 @@ class MedicalModel(Model):
                 # Random influence values
                 doctor.influence = random_influence()
                 doctor.stubbornness = random_influence()
-                print(str(i) + " " + str(doctor.influence) + " " + str(doctor.stubbornness))
-                if i == 2:
-                    doctor.influence = random_influence()
-                    doctor.stubbornness = random_influence()
+                # print("Doctor {} has an influence value of {} and a stubbornness value of {}".format(
+                #     i, doctor.influence, doctor.stubbornness))
                 self.schedule.add(doctor)
 
         # Create dictionary where avg_belief will be tracked for each argument
@@ -188,7 +184,7 @@ class MedicalModel(Model):
             committee_summary = [sum(x) for x in zip(committee_summary, placeholder)]
 
         probabilities = softmax(committee_summary)
-        print('softmax: ', probabilities)
+        # print('softmax: ', probabilities)
         # print('zika array: ', self.ZIKA_ARRAY)
         # print('chikv array: ', self.CHIKV_ARRAY)
 
@@ -205,6 +201,7 @@ class MedicalModel(Model):
                                                                            round(probability_chikv, 2)))
 
         disease = self.LIST_OF_DISEASES['X'] if probability_zika > probability_chikv else self.LIST_OF_DISEASES['Y']
+        self.final_decision = disease
         self.diagnosis_text = "The diagnosis for the patient is: {}.".format(disease)
         logger.info(self.diagnosis_text)
 
