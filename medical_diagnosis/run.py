@@ -47,7 +47,8 @@ if __name__ == '__main__':
         # ground truth remains Chikunguya.
         fixed_params = {
             "n_init_arg": n_init_arg,
-            "experiment_case": 2
+            "experiment_case": 2,
+            "sigma": 0.25
         }
         variable_params = {
             "N": range(1, n_doctors, 1)

@@ -33,10 +33,8 @@ def calculate_avg_belief(idx, model):
     return avg
 
 
-def random_belief_array():
-    # TODO the range is fixed. number of arguments is a parameter that can be changed (will be useful for the batch
-    #  runs)
-    return [numpy.random.choice(numpy.arange(0.1, 1, 0.1)) for x in range(5)]
+def random_belief_array(lenght, mu=0.5, sigma=0.25):
+    return numpy.random.normal(mu, sigma, lenght).tolist()
 
 
 def random_influence():
@@ -90,7 +88,7 @@ class MedicalModel(Model):
     ZIKA_ARRAY = [1., 0., 1., 0., 0.]
     CHIKV_ARRAY = [0., 1., 0., 1., 1.]
 
-    def __init__(self, N=3, n_init_arg=5, experiment_case=1):
+    def __init__(self, N=3, n_init_arg=5, experiment_case=1, sigma=0.25):
         self.num_agents = N
         self.n_initial_arguments = n_init_arg  # Number of initial arguments that doctors will consider
         self.experiment_case = experiment_case
@@ -123,10 +121,10 @@ class MedicalModel(Model):
             logger.info("Starting simulation for the default case. The initial set of arguments is the following:")
 
         elif self.experiment_case == 2:  # Batch run case
-            belief_array = [random_belief_array() for i in range(self.num_agents)]
 
             for i in range(self.num_agents):
-                doctor = DoctorAgent(i, self, belief_array[i])
+                belief_array = random_belief_array(lenght=self.n_initial_arguments, sigma=sigma)
+                doctor = DoctorAgent(i, self, belief_array)
                 # Random influence values
                 doctor.influence = random_influence()
                 doctor.stubbornness = random_influence()
