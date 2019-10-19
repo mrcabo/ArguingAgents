@@ -120,7 +120,6 @@ class MedicalModel(Model):
             logger.info("Starting simulation for the default case. The initial set of arguments is the following:")
 
         elif self.experiment_case == 2:  # Batch run case
-
             for i in range(self.num_agents):
                 belief_array = random_belief_array(lenght=self.n_initial_arguments, sigma=sigma)
                 doctor = DoctorAgent(i, self, belief_array)
