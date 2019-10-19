@@ -82,11 +82,6 @@ class MedicalModel(Model):
     LIST_OF_DISEASES = {"X": "Zika",
                         "Y": "Chikungunya"}
 
-    # TODO: this should be initialized inside the model. For batch they could be randomized with different weights,
-    #  for default case they should be hard coded, also with different weights e.g. arg E bigger weight
-    ZIKA_ARRAY = [1., 0., 1., 0., 0.]
-    CHIKV_ARRAY = [0., 1., 0., 1., 1.]
-
     def __init__(self, N=3, n_init_arg=5, experiment_case=1, sigma=0.25):
         self.num_agents = N
         self.n_initial_arguments = n_init_arg  # Number of initial arguments that doctors will consider
@@ -95,7 +90,9 @@ class MedicalModel(Model):
         # TODO:maybe calculate the diagnosis_probabilities before sending the to the collector, os it doesn't start at 0
         self.diagnosis_probabilities = numpy.zeros(len(self.LIST_OF_DISEASES)).tolist()
         self.final_decision = None
-
+        # How relevant is said argument to reach conclusion X or Y
+        self.arg_weight_vector = {"Zika": numpy.zeros(self.n_initial_arguments, dtype=float),
+                                  "Chikungunya": numpy.zeros(self.n_initial_arguments, dtype=float)}
         self.schedule = RandomActivation(self)  # Every tick, agents move in a different random order
 
         if self.experiment_case == 1:  # default case
@@ -106,6 +103,9 @@ class MedicalModel(Model):
             belief_array = [[0.75, 0.30, 0.80, 0.50, 0.50],
                             [0.80, 0.50, 0.70, 0.40, 0.50],
                             [0.40, 0.90, 0.55, 0.75, 0.98]]
+            # Hard coding the weight vectors for the default case, as we feel like they should be..
+            self.arg_weight_vector["Zika"] = numpy.asarray([0.4, 0., 0.6, 0., 0.])
+            self.arg_weight_vector["Chikungunya"] = numpy.asarray([0., 0.25, 0., 0.25, 0.5])
 
             for i in range(self.num_agents):
                 doctor = DoctorAgent(i, self, belief_array[i])
@@ -119,6 +119,9 @@ class MedicalModel(Model):
             logger.info("Starting simulation for the default case. The initial set of arguments is the following:")
 
         elif self.experiment_case == 2:  # Batch run case
+            # Hard coding the weight vectors for the default case, as we feel like they should be..
+            self.arg_weight_vector["Zika"] = numpy.asarray([0.4, 0., 0.6, 0., 0.])
+            self.arg_weight_vector["Chikungunya"] = numpy.asarray([0., 0.25, 0., 0.25, 0.5])
             for i in range(self.num_agents):
                 belief_array = random_belief_array(lenght=self.n_initial_arguments, sigma=sigma)
                 doctor = DoctorAgent(i, self, belief_array)
@@ -176,8 +179,10 @@ class MedicalModel(Model):
         # Convert it to probabilities
         probabilities_committee = softmax(committee_sum)
 
-        probability_zika = sum(numpy.multiply(self.ZIKA_ARRAY, probabilities_committee)) / sum(probabilities_committee)
-        probability_chikv = sum(numpy.multiply(self.CHIKV_ARRAY, probabilities_committee)) / sum(probabilities_committee)
+        probability_zika = sum(numpy.multiply(self.arg_weight_vector["Zika"], probabilities_committee)) / sum(
+            probabilities_committee)
+        probability_chikv = sum(numpy.multiply(self.arg_weight_vector["Chikungunya"], probabilities_committee)) / sum(
+            probabilities_committee)
 
         # TODO: this is a bit hard coded. it should be done better so it accepts different number of conclusions
         self.diagnosis_probabilities[0] = probability_zika
