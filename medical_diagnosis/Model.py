@@ -7,7 +7,7 @@ from mesa import Model
 from mesa.time import RandomActivation, BaseScheduler
 from mesa.datacollection import DataCollector
 
-from medical_diagnosis.DoctorAgent import DoctorAgent
+from medical_diagnosis.DoctorAgent import DoctorAgent, transform_convincing_value
 
 ARGUMENT_NAMES = ('A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J')
 COLORS = ('#00FF00', '#FF0000', '#0000FF', '#383B38', '#FF00FF',
@@ -42,8 +42,7 @@ def random_influence(mu=0.5, sigma=0.25):
 
 
 def softmax(x):
-    e_x = numpy.exp(x - numpy.max(x))
-    return e_x / e_x.sum(axis=0)
+    return numpy.exp(x) / sum(numpy.exp(x))
 
 
 def get_belief_val(idx, agent):
@@ -167,25 +166,18 @@ class MedicalModel(Model):
         logger.info("Doctor belief arrays after argumentation:")
         log_belief_arrays(self)
 
-        # placeholder = [1. for x in range(5)]
-        committee_summary = [0. for x in range(5)]
+        # Calculate the sum over all the belief arrays of all the doctors. Convincing values are used, so values <
+        # 0.5 will have a negative value, being beliefs closer to 0 convincing values closer to -1
+        committee_sum = numpy.zeros(self.n_initial_arguments)
         for doctor in self.schedule.agents:
-            # placeholder *= numpy.multiply(placeholder, doctor.belief_array)
-            # taking in consideration both certainties and uncertainties
-            # we consider values under 0.5 as a doctor's uncertainty in an arguments
-            # hence it will negatively affect the committee belief array summary
-            # ref: a more detailed discussion has been added in the report
-            placeholder = [-x if x < 0.5 else x for x in doctor.belief_array]
-            # print('placeholder: ', placeholder)
-            committee_summary = [sum(x) for x in zip(committee_summary, placeholder)]
+            conv_val = transform_convincing_value(doctor.belief_array)
+            committee_sum = numpy.add(committee_sum, conv_val)
+        committee_sum = transform_convincing_value(committee_sum, inv=True)
+        # Convert it to probabilities
+        probabilities_committee = softmax(committee_sum)
 
-        probabilities = softmax(committee_summary)
-        # print('softmax: ', probabilities)
-        # print('zika array: ', self.ZIKA_ARRAY)
-        # print('chikv array: ', self.CHIKV_ARRAY)
-
-        probability_zika = sum(numpy.multiply(self.ZIKA_ARRAY, probabilities)) / sum(probabilities)
-        probability_chikv = sum(numpy.multiply(self.CHIKV_ARRAY, probabilities)) / sum(probabilities)
+        probability_zika = sum(numpy.multiply(self.ZIKA_ARRAY, probabilities_committee)) / sum(probabilities_committee)
+        probability_chikv = sum(numpy.multiply(self.CHIKV_ARRAY, probabilities_committee)) / sum(probabilities_committee)
 
         # TODO: this is a bit hard coded. it should be done better so it accepts different number of conclusions
         self.diagnosis_probabilities[0] = probability_zika
