@@ -37,8 +37,8 @@ def random_belief_array(lenght, mu=0.5, sigma=0.25):
     return numpy.random.normal(mu, sigma, lenght).tolist()
 
 
-def random_influence():
-    return numpy.random.choice(numpy.arange(0, 1, 0.01))
+def random_influence(mu=0.5, sigma=0.25):
+    return numpy.random.normal(mu, sigma)
 
 
 def softmax(x):
@@ -103,14 +103,13 @@ class MedicalModel(Model):
             if (self.num_agents != 3) or (self.n_initial_arguments != 5):
                 print("Sorry, the default case only works with 3 doctors and 5 initial arguments")
                 exit()
-            # TODO: this should be fixed for the default case. For the batch is when it should be randomized
+            # This should be fixed for the default case. For the batch is when it should be randomized
             belief_array = [[0.75, 0.30, 0.80, 0.50, 0.50],
                             [0.80, 0.50, 0.70, 0.40, 0.50],
                             [0.40, 0.90, 0.55, 0.75, 0.98]]
 
             for i in range(self.num_agents):
                 doctor = DoctorAgent(i, self, belief_array[i])
-                # TODO: again, hardcoded for default case, random for batch runs..
                 doctor.influence = 0.5
                 doctor.stubbornness = 0.5
                 if i == 2:
@@ -126,8 +125,8 @@ class MedicalModel(Model):
                 belief_array = random_belief_array(lenght=self.n_initial_arguments, sigma=sigma)
                 doctor = DoctorAgent(i, self, belief_array)
                 # Random influence values
-                doctor.influence = random_influence()
-                doctor.stubbornness = random_influence()
+                doctor.influence = random_influence(0.5, 0.25)
+                doctor.stubbornness = random_influence(0.5, 0.25)
                 # print("Doctor {} has an influence value of {} and a stubbornness value of {}".format(
                 #     i, doctor.influence, doctor.stubbornness))
                 self.schedule.add(doctor)
