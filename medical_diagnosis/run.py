@@ -45,10 +45,14 @@ if __name__ == '__main__':
     if experiment_case == 2:  # Batch run
         # Let's do that experiment_case is a batch run of the default case, so diseases are the same. Also,
         # ground truth remains Chikunguya.
+        # Hard coding the weight vectors for the default case, as we feel like they should be..
+        arg_weight_vector = {"Zika": np.asarray([0.4, 0., 0.6, 0., 0.]),
+                             "Chikungunya": np.asarray([0., 0.25, 0., 0.25, 0.5])}
         fixed_params = {
             "n_init_arg": n_init_arg,
             "experiment_case": 2,
-            "sigma": 0.25
+            "sigma": 0.25,
+            "arg_weight_vector": arg_weight_vector
         }
         variable_params = {
             "N": range(1, n_doctors, 1)

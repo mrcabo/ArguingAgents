@@ -82,7 +82,7 @@ class MedicalModel(Model):
     LIST_OF_DISEASES = {"X": "Zika",
                         "Y": "Chikungunya"}
 
-    def __init__(self, N=3, n_init_arg=5, experiment_case=1, sigma=0.25):
+    def __init__(self, N=3, n_init_arg=5, experiment_case=1, sigma=0.25, arg_weight_vector=None):
         self.num_agents = N
         self.n_initial_arguments = n_init_arg  # Number of initial arguments that doctors will consider
         self.experiment_case = experiment_case
@@ -91,8 +91,11 @@ class MedicalModel(Model):
         self.diagnosis_probabilities = numpy.zeros(len(self.LIST_OF_DISEASES)).tolist()
         self.final_decision = None
         # How relevant is said argument to reach conclusion X or Y
-        self.arg_weight_vector = {"Zika": numpy.zeros(self.n_initial_arguments, dtype=float),
-                                  "Chikungunya": numpy.zeros(self.n_initial_arguments, dtype=float)}
+        if arg_weight_vector is not None:
+            self.arg_weight_vector = arg_weight_vector
+        else:
+            self.arg_weight_vector = {"Zika": numpy.zeros(self.n_initial_arguments, dtype=float),
+                                      "Chikungunya": numpy.zeros(self.n_initial_arguments, dtype=float)}
         self.schedule = RandomActivation(self)  # Every tick, agents move in a different random order
 
         if self.experiment_case == 1:  # default case
@@ -119,9 +122,6 @@ class MedicalModel(Model):
             logger.info("Starting simulation for the default case. The initial set of arguments is the following:")
 
         elif self.experiment_case == 2:  # Batch run case
-            # Hard coding the weight vectors for the default case, as we feel like they should be..
-            self.arg_weight_vector["Zika"] = numpy.asarray([0.4, 0., 0.6, 0., 0.])
-            self.arg_weight_vector["Chikungunya"] = numpy.asarray([0., 0.25, 0., 0.25, 0.5])
             for i in range(self.num_agents):
                 belief_array = random_belief_array(lenght=self.n_initial_arguments, sigma=sigma)
                 doctor = DoctorAgent(i, self, belief_array)
