@@ -7,7 +7,7 @@ from mesa import Model
 from mesa.time import RandomActivation, BaseScheduler
 from mesa.datacollection import DataCollector
 
-from medical_diagnosis.DoctorAgent import DoctorAgent
+from medical_diagnosis.DoctorAgent import DoctorAgent, transform_convincing_value
 
 ARGUMENT_NAMES = ('A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J')
 COLORS = ('#00FF00', '#FF0000', '#0000FF', '#383B38', '#FF00FF',
@@ -33,19 +33,16 @@ def calculate_avg_belief(idx, model):
     return avg
 
 
-def random_belief_array():
-    # TODO the range is fixed. number of arguments is a parameter that can be changed (will be useful for the batch
-    #  runs)
-    return [numpy.random.choice(numpy.arange(0.1, 1, 0.1)) for x in range(5)]
+def random_belief_array(lenght, mu=0.5, sigma=0.25):
+    return numpy.random.normal(mu, sigma, lenght).tolist()
 
 
-def random_influence():
-    return numpy.random.choice(numpy.arange(0, 1, 0.01))
+def random_influence(mu=0.5, sigma=0.25):
+    return numpy.random.normal(mu, sigma)
 
 
 def softmax(x):
-    e_x = numpy.exp(x - numpy.max(x))
-    return e_x / e_x.sum(axis=0)
+    return numpy.exp(x) / sum(numpy.exp(x))
 
 
 def get_belief_val(idx, agent):
@@ -54,6 +51,10 @@ def get_belief_val(idx, agent):
 
 def get_diagnosis_probabilities(idx, model):
     return model.diagnosis_probabilities[idx]
+
+
+def get_final_decision(model):
+    return model.final_decision
 
 
 def log_belief_arrays(model):
@@ -81,35 +82,36 @@ class MedicalModel(Model):
     LIST_OF_DISEASES = {"X": "Zika",
                         "Y": "Chikungunya"}
 
-    # TODO: this should be initialized inside the model. For batch they could be randomized with different weights,
-    #  for default case they should be hard coded, also with different weights e.g. arg E bigger weight
-    ZIKA_ARRAY = [1., 0., 1., 0., 0.]
-    CHIKV_ARRAY = [0., 1., 0., 1., 1.]
-
-    def __init__(self, N=3, n_init_arg=5, experiment_case=1):
+    def __init__(self, N=3, n_init_arg=5, experiment_case=1, sigma=0.25, arg_weight_vector=None):
         self.num_agents = N
         self.n_initial_arguments = n_init_arg  # Number of initial arguments that doctors will consider
-        self.ground_truth = "Y"  # hardcoded for now..
         self.experiment_case = experiment_case
         self.diagnosis_text = ""
         # TODO:maybe calculate the diagnosis_probabilities before sending the to the collector, os it doesn't start at 0
         self.diagnosis_probabilities = numpy.zeros(len(self.LIST_OF_DISEASES)).tolist()
-
+        self.final_decision = None
+        # How relevant is said argument to reach conclusion X or Y
+        if arg_weight_vector is not None:
+            self.arg_weight_vector = arg_weight_vector
+        else:
+            self.arg_weight_vector = {"Zika": numpy.zeros(self.n_initial_arguments, dtype=float),
+                                      "Chikungunya": numpy.zeros(self.n_initial_arguments, dtype=float)}
         self.schedule = RandomActivation(self)  # Every tick, agents move in a different random order
 
         if self.experiment_case == 1:  # default case
             if (self.num_agents != 3) or (self.n_initial_arguments != 5):
                 print("Sorry, the default case only works with 3 doctors and 5 initial arguments")
                 exit()
-            ground_truth = "X"  # The ground truth for this particular diagnosis (real disease)
-            # TODO: this should be fixed for the default case. For the batch is when it should be randomized
+            # This should be fixed for the default case. For the batch is when it should be randomized
             belief_array = [[0.75, 0.30, 0.80, 0.50, 0.50],
                             [0.80, 0.50, 0.70, 0.40, 0.50],
                             [0.40, 0.90, 0.55, 0.75, 0.98]]
+            # Hard coding the weight vectors for the default case, as we feel like they should be..
+            self.arg_weight_vector["Zika"] = numpy.asarray([0.4, 0., 0.6, 0., 0.])
+            self.arg_weight_vector["Chikungunya"] = numpy.asarray([0., 0.25, 0., 0.25, 0.5])
 
             for i in range(self.num_agents):
                 doctor = DoctorAgent(i, self, belief_array[i])
-                # TODO: again, hardcoded for default case, random for batch runs..
                 doctor.influence = 0.5
                 doctor.stubbornness = 0.5
                 if i == 2:
@@ -120,22 +122,14 @@ class MedicalModel(Model):
             logger.info("Starting simulation for the default case. The initial set of arguments is the following:")
 
         elif self.experiment_case == 2:  # Batch run case
-
-            if (self.num_agents != 3) or (self.n_initial_arguments != 5):
-                print("Sorry, the default case only works with 3 doctors and 5 initial arguments")
-                exit()
-            ground_truth = "X"  # The ground truth for this particular diagnosis (real disease)
-            belief_array = [random_belief_array() for i in range(self.num_agents)]
-
             for i in range(self.num_agents):
-                doctor = DoctorAgent(i, self, belief_array[i])
+                belief_array = random_belief_array(lenght=self.n_initial_arguments, sigma=sigma)
+                doctor = DoctorAgent(i, self, belief_array)
                 # Random influence values
-                doctor.influence = random_influence()
-                doctor.stubbornness = random_influence()
-                print(str(i) + " " + str(doctor.influence) + " " + str(doctor.stubbornness))
-                if i == 2:
-                    doctor.influence = random_influence()
-                    doctor.stubbornness = random_influence()
+                doctor.influence = random_influence(0.5, 0.25)
+                doctor.stubbornness = random_influence(0.5, 0.25)
+                # print("Doctor {} has an influence value of {} and a stubbornness value of {}".format(
+                #     i, doctor.influence, doctor.stubbornness))
                 self.schedule.add(doctor)
 
         # Create dictionary where avg_belief will be tracked for each argument
@@ -175,25 +169,20 @@ class MedicalModel(Model):
         logger.info("Doctor belief arrays after argumentation:")
         log_belief_arrays(self)
 
-        # placeholder = [1. for x in range(5)]
-        committee_summary = [0. for x in range(5)]
+        # Calculate the sum over all the belief arrays of all the doctors. Convincing values are used, so values <
+        # 0.5 will have a negative value, being beliefs closer to 0 convincing values closer to -1
+        committee_sum = numpy.zeros(self.n_initial_arguments)
         for doctor in self.schedule.agents:
-            # placeholder *= numpy.multiply(placeholder, doctor.belief_array)
-            # taking in consideration both certainties and uncertainties
-            # we consider values under 0.5 as a doctor's uncertainty in an arguments
-            # hence it will negatively affect the committee belief array summary
-            # ref: a more detailed discussion has been added in the report
-            placeholder = [-x if x < 0.5 else x for x in doctor.belief_array]
-            # print('placeholder: ', placeholder)
-            committee_summary = [sum(x) for x in zip(committee_summary, placeholder)]
+            conv_val = transform_convincing_value(doctor.belief_array)
+            committee_sum = numpy.add(committee_sum, conv_val)
+        committee_sum = transform_convincing_value(committee_sum, inv=True)
+        # Convert it to probabilities
+        probabilities_committee = softmax(committee_sum)
 
-        probabilities = softmax(committee_summary)
-        print('softmax: ', probabilities)
-        # print('zika array: ', self.ZIKA_ARRAY)
-        # print('chikv array: ', self.CHIKV_ARRAY)
-
-        probability_zika = sum(numpy.multiply(self.ZIKA_ARRAY, probabilities)) / sum(probabilities)
-        probability_chikv = sum(numpy.multiply(self.CHIKV_ARRAY, probabilities)) / sum(probabilities)
+        probability_zika = sum(numpy.multiply(self.arg_weight_vector["Zika"], probabilities_committee)) / sum(
+            probabilities_committee)
+        probability_chikv = sum(numpy.multiply(self.arg_weight_vector["Chikungunya"], probabilities_committee)) / sum(
+            probabilities_committee)
 
         # TODO: this is a bit hard coded. it should be done better so it accepts different number of conclusions
         self.diagnosis_probabilities[0] = probability_zika
@@ -205,6 +194,7 @@ class MedicalModel(Model):
                                                                            round(probability_chikv, 2)))
 
         disease = self.LIST_OF_DISEASES['X'] if probability_zika > probability_chikv else self.LIST_OF_DISEASES['Y']
+        self.final_decision = disease
         self.diagnosis_text = "The diagnosis for the patient is: {}.".format(disease)
         logger.info(self.diagnosis_text)
 
