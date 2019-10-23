@@ -2,6 +2,7 @@ from functools import partial
 import logging
 
 import numpy
+from scipy.stats import truncnorm
 
 from mesa import Model
 from mesa.time import RandomActivation, BaseScheduler
@@ -33,8 +34,20 @@ def calculate_avg_belief(idx, model):
     return avg
 
 
-def random_belief_array(lenght, mu=0.5, sigma=0.25):
-    return numpy.random.normal(mu, sigma, lenght).tolist()
+def get_truncated_normal(mean=0, sd=1, low=0, upp=1): #truncates the normal distribution to the range 0 and 1
+    return truncnorm.rvs((low - mean) / sd, (upp - mean) / sd, loc=mean, scale=sd)
+
+
+def random_belief_array(length, sigma=0.15, weight_vector, team):
+    mus = weight_vector[team]  # the weight vector for the team they belong to
+    res = []
+    for i in range(length):
+        if mus[i] == 0:
+            res.append(get_truncated_normal(mus[i], sigma))
+        else:
+            mu = 0.5 + (mus[i] * 0.5)
+            res.append(numpy.random.normal(mu, sigma))
+    return res
 
 
 def random_influence(mu=0.5, sigma=0.25):
@@ -62,6 +75,8 @@ def log_belief_arrays(model):
         text = "Doctor {}: {}".format(doctor._doctor_id, numpy.round(doctor.belief_array, 2))
         logger.info(text)
 
+def assign_team(num_agents):
+    return [numpy.random.choice(["Zika", "Chikungunya"], replace=False) for i in num_agents]
 
 class MedicalModel(Model):
     """
@@ -122,8 +137,9 @@ class MedicalModel(Model):
             logger.info("Starting simulation for the default case. The initial set of arguments is the following:")
 
         elif self.experiment_case == 2:  # Batch run case
+            teams = assign_team(self.num_agents)
             for i in range(self.num_agents):
-                belief_array = random_belief_array(lenght=self.n_initial_arguments, sigma=sigma)
+                belief_array = random_belief_array(length=self.n_initial_arguments, sigma=0.15,  self.arg_weight_vector, teams[i])
                 doctor = DoctorAgent(i, self, belief_array)
                 # Random influence values
                 doctor.influence = random_influence(0.5, 0.25)
