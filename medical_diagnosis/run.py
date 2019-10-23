@@ -51,7 +51,7 @@ if __name__ == '__main__':
         fixed_params = {
             "n_init_arg": n_init_arg,
             "experiment_case": 2,
-            "sigma": 0.25,
+            "sigma": 0.15,
             "arg_weight_vector": arg_weight_vector
         }
         variable_params = {
@@ -103,7 +103,7 @@ if __name__ == '__main__':
         plt.ylabel('Number of correct diagnosis')
         plt.title('Number of correct diagnosis per {} cases'.format(n_batch_iter))
         plt.xticks(ind, tuple(np.arange(1, n_doctors, 1).astype(str)))
-        plt.show()
+        plt.savefig("../results/batch2.png")
     else:
         server = ServerClass(n_doctors, n_init_arg, experiment_case)
         server.server.launch()

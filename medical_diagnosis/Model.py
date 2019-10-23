@@ -16,7 +16,7 @@ COLORS = ('#00FF00', '#FF0000', '#0000FF', '#383B38', '#FF00FF',
 
 logger = logging.getLogger('medical_diagnosis')
 
-
+numpy.random.seed(100)
 def calculate_avg_belief(idx, model):
     """
     Calculates the mean of the belief for a certain argument between all agents
@@ -38,7 +38,7 @@ def get_truncated_normal(mean=0, sd=1, low=0, upp=1): #truncates the normal dist
     return truncnorm.rvs((low - mean) / sd, (upp - mean) / sd, loc=mean, scale=sd)
 
 
-def random_belief_array(length, sigma=0.15, weight_vector, team):
+def random_belief_array(length, sigma, weight_vector, team):
     mus = weight_vector[team]  # the weight vector for the team they belong to
     res = []
     for i in range(length):
@@ -76,7 +76,7 @@ def log_belief_arrays(model):
         logger.info(text)
 
 def assign_team(num_agents):
-    return [numpy.random.choice(["Zika", "Chikungunya"], replace=False) for i in num_agents]
+    return [numpy.random.choice(["Zika", "Chikungunya"], replace=False) for i in range(num_agents)]
 
 class MedicalModel(Model):
     """
@@ -139,7 +139,7 @@ class MedicalModel(Model):
         elif self.experiment_case == 2:  # Batch run case
             teams = assign_team(self.num_agents)
             for i in range(self.num_agents):
-                belief_array = random_belief_array(length=self.n_initial_arguments, sigma=0.15,  self.arg_weight_vector, teams[i])
+                belief_array = random_belief_array(length=self.n_initial_arguments, sigma=sigma,  weight_vector=self.arg_weight_vector, team=teams[i])
                 doctor = DoctorAgent(i, self, belief_array)
                 # Random influence values
                 doctor.influence = random_influence(0.5, 0.25)
