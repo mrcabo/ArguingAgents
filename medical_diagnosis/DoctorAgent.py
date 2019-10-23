@@ -125,7 +125,8 @@ def default_case_influencing(agent):
                         new_val = agent_conv_array[arg_idx]
 
                     colleague_conv_array[arg_idx] = new_val
-            colleague.belief_array = transform_convincing_value(colleague_conv_array, inv=True)  # Convert B' back to B
+            # Convert B' back to B
+            colleague.belief_array = transform_convincing_value(colleague_conv_array, inv=True).tolist()
 
 
 class DoctorAgent(Agent):
