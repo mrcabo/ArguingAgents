@@ -36,10 +36,10 @@ def calculate_avg_belief(idx, model):
 def random_belief_array():
     # TODO the range is fixed. number of arguments is a parameter that can be changed (will be useful for the batch
     #  runs)
-    return [numpy.random.choice(numpy.arange(0.1, 1, 0.1)) for x in range(5)]
+    return [numpy.random.choice(numpy.arange(0.1, 1, 0.5)) for x in range(5)]
 
 def random_influence():
-    return numpy.random.choice(numpy.arange(0, 1, 0.01))
+    return numpy.random.choice(numpy.arange(0, 1, 0.5))
 
 def softmax(x):
     e_x = numpy.exp(x - numpy.max(x))
@@ -84,7 +84,7 @@ class MedicalModel(Model):
     ZIKA_ARRAY = [1., 0., 1., 0., 0.]
     CHIKV_ARRAY = [0., 1., 0., 1., 1.]
 
-    def __init__(self, N=3, n_init_arg=5, experiment_case=1):
+    def __init__(self, N=3, n_init_arg=5, experiment_case):
         self.num_agents = N
         self.n_initial_arguments = n_init_arg  # Number of initial arguments that doctors will consider
         self.ground_truth = "Y"  # hardcoded for now..
@@ -93,7 +93,10 @@ class MedicalModel(Model):
         self.diagnosis_text = ""
         # TODO:maybe calculate the diagnosis_probabilities before sending the to the collector, os it doesn't start at 0
         self.diagnosis_probabilities = numpy.zeros(len(self.LIST_OF_DISEASES)).tolist()
-      
+        self.batch_results = 
+        # if self.default_case:
+        #     self.schedule = BaseScheduler(self)  # For now so they speak in order..
+        # else:
         self.schedule = RandomActivation(self)  # Every tick, agents move in a different random order
 
         if self.experiment_case == 1: #default case
@@ -124,24 +127,41 @@ class MedicalModel(Model):
 
         elif self.experiment_case == 2: #Batch run case
             
+            # vary number of agents, resultant decision for each run
             if (self.num_agents != 3) or (self.n_initial_arguments != 5):
                 print("Sorry, the default case only works with 3 doctors and 5 initial arguments")
                 exit()
             ground_truth = "X"  # The ground truth for this particular diagnosis (real disease)
+            # TODO: this should be fixed for the default case. For the batch is when it should be randomized
             belief_array = [random_belief_array() for i in range(self.num_agents)]
 
             for i in range(self.num_agents):
                 doctor = DoctorAgent(i, self, belief_array[i])
-                # Random influence values
+                # TODO: again, hardcoded for default case, random for batch runs..
                 doctor.influence = random_influence()
                 doctor.stubbornness = random_influence()
-                print(str(i)+" "+str(doctor.influence)+ " " + str(doctor.stubbornness))
                 if i == 2:
                     doctor.influence = random_influence()
                     doctor.stubbornness = random_influence()
                 self.schedule.add(doctor)
 
 
+        else:
+            atoms = [numpy.random.choice(numpy.arange(0, 1, 0.01)) for x in range(5)]
+            possible_decisions = [0, 1, 2]
+
+            # actual ground truth of the diagnosis
+            # in this particular case, we assume it to be decision 2
+            ground_truth = 2
+
+            # create agents
+
+            for agent in range(self.num_agents):
+                # belief array is randomly generated for each each
+                # represents likeliness of an agent to believe a given atom
+                belief_array = [numpy.random.choice(numpy.arange(0, 1, 0.1)) for x in range(5)]
+                doctor = DoctorAgent(agent, self, belief_array, possible_decisions, atoms, ground_truth)
+                self.schedule.add(doctor)
 
         # Create dictionary where avg_belief will be tracked for each argument
         dict_model_collector = {}
@@ -194,15 +214,14 @@ class MedicalModel(Model):
 
         probabilities = softmax(committee_summary)
         print('softmax: ', probabilities)
-        # print('zika array: ', self.ZIKA_ARRAY)
-        # print('chikv array: ', self.CHIKV_ARRAY)
-
+    
         probability_zika = sum(numpy.multiply(self.ZIKA_ARRAY, probabilities)) / sum(probabilities)
         probability_chikv = sum(numpy.multiply(self.CHIKV_ARRAY, probabilities)) / sum(probabilities)
 
         # TODO: this is a bit hard coded. it should be done better so it accepts different number of conclusions
         self.diagnosis_probabilities[0] = probability_zika
         self.diagnosis_probabilities[1] = probability_chikv
+
 
         logger.info("Probability for the diagnosis being {} is: {}".format(self.LIST_OF_DISEASES['X'],
                                                                            round(probability_zika, 2)))
