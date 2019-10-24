@@ -132,6 +132,8 @@ class MedicalModel(Model):
                 #     i, doctor.influence, doctor.stubbornness))
                 self.schedule.add(doctor)
 
+        self.calculate_committee()  # Calculates initial point for the committee decision.
+
         # Create dictionary where avg_belief will be tracked for each argument
         dict_model_collector = {}
         for i in range(self.n_initial_arguments):
@@ -168,7 +170,22 @@ class MedicalModel(Model):
         self.schedule.step()
         logger.info("Doctor belief arrays after argumentation:")
         log_belief_arrays(self)
+        self.calculate_committee()
+        logger.info("Probability for the diagnosis being {} is: {}".format(self.LIST_OF_DISEASES['X'],
+                                                                           round(self.diagnosis_probabilities[0], 2)))
+        logger.info("Probability for the diagnosis being {} is: {}".format(self.LIST_OF_DISEASES['Y'],
+                                                                           round(self.diagnosis_probabilities[1], 2)))
+        if self.diagnosis_probabilities[0] > self.diagnosis_probabilities[1]:
+            disease = self.LIST_OF_DISEASES['X']
+        else:
+            disease = self.LIST_OF_DISEASES['Y']
+        self.final_decision = disease
+        self.diagnosis_text = "The diagnosis for the patient is: {}.".format(disease)
+        logger.info(self.diagnosis_text)
 
+        self.datacollector.collect(self)
+
+    def calculate_committee(self):
         # Calculate the sum over all the belief arrays of all the doctors. Convincing values are used, so values <
         # 0.5 will have a negative value, being beliefs closer to 0 convincing values closer to -1
         committee_sum = numpy.zeros(self.n_initial_arguments)
@@ -178,24 +195,10 @@ class MedicalModel(Model):
         committee_sum = transform_convincing_value(committee_sum, inv=True)
         # Convert it to probabilities
         probabilities_committee = softmax(committee_sum)
-
         probability_zika = sum(numpy.multiply(self.arg_weight_vector["Zika"], probabilities_committee)) / sum(
             probabilities_committee)
         probability_chikv = sum(numpy.multiply(self.arg_weight_vector["Chikungunya"], probabilities_committee)) / sum(
             probabilities_committee)
-
-        # TODO: this is a bit hard coded. it should be done better so it accepts different number of conclusions
-        self.diagnosis_probabilities[0] = probability_zika
-        self.diagnosis_probabilities[1] = probability_chikv
-
-        logger.info("Probability for the diagnosis being {} is: {}".format(self.LIST_OF_DISEASES['X'],
-                                                                           round(probability_zika, 2)))
-        logger.info("Probability for the diagnosis being {} is: {}".format(self.LIST_OF_DISEASES['Y'],
-                                                                           round(probability_chikv, 2)))
-
-        disease = self.LIST_OF_DISEASES['X'] if probability_zika > probability_chikv else self.LIST_OF_DISEASES['Y']
-        self.final_decision = disease
-        self.diagnosis_text = "The diagnosis for the patient is: {}.".format(disease)
-        logger.info(self.diagnosis_text)
-
-        self.datacollector.collect(self)
+        probability_conclusion = softmax((probability_zika, probability_chikv))
+        self.diagnosis_probabilities[0] = probability_conclusion[0]
+        self.diagnosis_probabilities[1] = probability_conclusion[1]
