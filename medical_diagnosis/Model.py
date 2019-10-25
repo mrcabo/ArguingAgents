@@ -2,7 +2,7 @@ from functools import partial
 import logging
 
 import numpy
-
+from scipy.stats import truncnorm
 from mesa import Model
 from mesa.time import RandomActivation, BaseScheduler
 from mesa.datacollection import DataCollector
@@ -33,8 +33,12 @@ def calculate_avg_belief(idx, model):
     return avg
 
 
+def get_truncated_normal(mean=0, sd=1, low=0, upp=1):  # truncates the normal distribution to the range 0 and 1
+    return truncnorm.rvs((low - mean) / sd, (upp - mean) / sd, loc=mean, scale=sd)
+
+
 def random_belief_array(lenght, mu=0.5, sigma=0.25):
-    return numpy.random.normal(mu, sigma, lenght).tolist()
+    return [get_truncated_normal(mean=mu, sd=sigma) for _ in range(lenght)]
 
 
 def random_influence(mu=0.5, sigma=0.25):
