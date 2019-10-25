@@ -37,7 +37,7 @@ def initialisations(nb_doctors, case, n_args):
     uncertain_belief_set = (0.4, 0.5, 0.6)
     strong_belief_set = (0.8, 0.9, 1.0)
     weak_belief_set = (0, 0.1, 0.2, 0.3)
-    strong_belief_conclusion =  [[0.90, 0.3, 0.80, 0.2, 0.4], [0.3, 0.75, 0.2, 0.80, 0.90]]
+    strong_belief_conclusion =  [[0.90, 0.3, 0.90, 0.2, 0.4], [0.3, 0.90, 0.2, 0.80, 0.90]]
 
     belief_array_list = []
     influence_stubbornn_list = []

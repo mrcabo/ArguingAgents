@@ -112,7 +112,7 @@ class MedicalModel(Model):
             self.arg_weight_vector["Chikungunya"] = numpy.asarray([0., 0.25, 0., 0.25, 0.5])
 
             # call intialisation with number of doctors, case number and number of arguments
-            placeholder = initialisations(nb_doctors=self.num_agents, case=3, n_args=5)
+            placeholder = initialisations(nb_doctors=self.num_agents, case=5, n_args=5)
             belief_array = placeholder[0]
             influence_stubborn_list = placeholder[1]
 
