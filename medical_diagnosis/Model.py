@@ -1,13 +1,14 @@
 from functools import partial
 import logging
-
 import numpy
+
 
 from mesa import Model
 from mesa.time import RandomActivation, BaseScheduler
 from mesa.datacollection import DataCollector
 
 from medical_diagnosis.DoctorAgent import DoctorAgent, transform_convincing_value
+from initialisations import initialisations
 
 ARGUMENT_NAMES = ('A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J')
 COLORS = ('#00FF00', '#FF0000', '#0000FF', '#383B38', '#FF00FF',
@@ -103,21 +104,34 @@ class MedicalModel(Model):
                 print("Sorry, the default case only works with 3 doctors and 5 initial arguments")
                 exit()
             # This should be fixed for the default case. For the batch is when it should be randomized
-            belief_array = [[0.75, 0.30, 0.80, 0.50, 0.50],
-                            [0.80, 0.50, 0.70, 0.40, 0.50],
-                            [0.40, 0.90, 0.55, 0.75, 0.98]]
+            # belief_array = [[0.75, 0.30, 0.80, 0.50, 0.50],
+            #                 [0.80, 0.50, 0.70, 0.40, 0.50],
+            #                 [0.40, 0.70, 0.55, 0.75, 0.98]]
             # Hard coding the weight vectors for the default case, as we feel like they should be..
             self.arg_weight_vector["Zika"] = numpy.asarray([0.4, 0., 0.6, 0., 0.])
             self.arg_weight_vector["Chikungunya"] = numpy.asarray([0., 0.25, 0., 0.25, 0.5])
 
+            # call intialisation with number of doctors, case number and number of arguments
+            placeholder = initialisations(nb_doctors=self.num_agents, case=3, n_args=5)
+            belief_array = placeholder[0]
+            influence_stubborn_list = placeholder[1]
+
             for i in range(self.num_agents):
                 doctor = DoctorAgent(i, self, belief_array[i])
-                doctor.influence = 0.5
-                doctor.stubbornness = 0.5
-                if i == 2:
-                    doctor.influence = 0.7
-                    doctor.stubbornness = 0.6
+                doctor.influence, doctor.stubbornness = influence_stubborn_list[i]
                 self.schedule.add(doctor)
+
+            # for i in range(self.num_agents):
+            #     doctor = DoctorAgent(i, self, belief_array[i])
+            #     doctor.influence = 0.5
+            #     doctor.stubbornness = 0.5
+            #     if i == 1:
+            #         doctor.stubbornness = 0.5
+            #         doctor.influence = 0.5
+            #     if i == 2:
+            #         doctor.influence = 0.5
+            #         doctor.stubbornness = 0.5
+            #     self.schedule.add(doctor)
 
             logger.info("Starting simulation for the default case. The initial set of arguments is the following:")
 
@@ -184,14 +198,17 @@ class MedicalModel(Model):
         probability_chikv = sum(numpy.multiply(self.arg_weight_vector["Chikungunya"], probabilities_committee)) / sum(
             probabilities_committee)
 
+        probabilities = softmax([probability_zika, probability_chikv])
+
+        print(probabilities)
         # TODO: this is a bit hard coded. it should be done better so it accepts different number of conclusions
-        self.diagnosis_probabilities[0] = probability_zika
-        self.diagnosis_probabilities[1] = probability_chikv
+        self.diagnosis_probabilities[0] = probabilities[0]
+        self.diagnosis_probabilities[1] = probabilities[1]
 
         logger.info("Probability for the diagnosis being {} is: {}".format(self.LIST_OF_DISEASES['X'],
-                                                                           round(probability_zika, 2)))
+                                                                           round(probabilities[0], 2)))
         logger.info("Probability for the diagnosis being {} is: {}".format(self.LIST_OF_DISEASES['Y'],
-                                                                           round(probability_chikv, 2)))
+                                                                           round(probabilities[1], 2)))
 
         disease = self.LIST_OF_DISEASES['X'] if probability_zika > probability_chikv else self.LIST_OF_DISEASES['Y']
         self.final_decision = disease
