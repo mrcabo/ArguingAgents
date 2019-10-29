@@ -19,7 +19,8 @@ def parse_arguments():
     parser.add_argument('--n_init_arg', type=int, default=5,
                         help='Number of initial arguments.')
     parser.add_argument('--experiment_case', type=int, default=1,
-                        help='Use the default case instead of random beliefs in arguments.')
+                        help='Use the default case instead of random beliefs in arguments. (1-default case, '
+                             '2-batch run)')
     parser.add_argument('--n_batch_iter', type=int, default=5,
                         help='Number of iterations in the batch run.')
     args = parser.parse_args()
