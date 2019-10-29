@@ -2,13 +2,12 @@ from functools import partial
 import logging
 import numpy
 
-
 from mesa import Model
 from mesa.time import RandomActivation, BaseScheduler
 from mesa.datacollection import DataCollector
 
 from medical_diagnosis.DoctorAgent import DoctorAgent, transform_convincing_value
-from initialisations import initialisations
+from medical_diagnosis.initialisations import initialisations
 
 ARGUMENT_NAMES = ('A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J')
 COLORS = ('#00FF00', '#FF0000', '#0000FF', '#383B38', '#FF00FF',
@@ -112,25 +111,24 @@ class MedicalModel(Model):
             self.arg_weight_vector["Chikungunya"] = numpy.asarray([0., 0.25, 0., 0.25, 0.5])
 
             # call intialisation with number of doctors, case number and number of arguments
-            placeholder = initialisations(nb_doctors=self.num_agents, case=5, n_args=5)
+            placeholder = initialisations(nb_doctors=self.num_agents, case=2, n_args=5)
             belief_array = placeholder[0]
             influence_stubborn_list = placeholder[1]
 
+            # For testing different cases
             for i in range(self.num_agents):
                 doctor = DoctorAgent(i, self, belief_array[i])
                 doctor.influence, doctor.stubbornness = influence_stubborn_list[i]
                 self.schedule.add(doctor)
 
+            # For the default case only
             # for i in range(self.num_agents):
             #     doctor = DoctorAgent(i, self, belief_array[i])
             #     doctor.influence = 0.5
             #     doctor.stubbornness = 0.5
-            #     if i == 1:
-            #         doctor.stubbornness = 0.5
-            #         doctor.influence = 0.5
             #     if i == 2:
-            #         doctor.influence = 0.5
-            #         doctor.stubbornness = 0.5
+            #         doctor.influence = 0.7
+            #         doctor.stubbornness = 0.7
             #     self.schedule.add(doctor)
 
             logger.info("Starting simulation for the default case. The initial set of arguments is the following:")
@@ -230,5 +228,3 @@ class MedicalModel(Model):
         self.final_decision = disease
         self.diagnosis_text = "The diagnosis for the patient is: {}.".format(disease)
         logger.info(self.diagnosis_text)
-
-        self.datacollector.collect(self)

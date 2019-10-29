@@ -1,5 +1,6 @@
 import random
 
+
 def initialisations(nb_doctors, case, n_args):
     '''
     We use four standard cases here, namely following cases:
@@ -30,14 +31,14 @@ def initialisations(nb_doctors, case, n_args):
     :return: a list of belief arrays and list of stubborn influence value for each doctor
     '''
 
-    strong_influence_set = (0.8, 0.9, 1.0)
-    strong_stubbornn_set = (0.8, 0.9, 1.0)
+    strong_influence_set = (0.8, 0.9, 0.95)
+    strong_stubbornn_set = (0.8, 0.9, 0.95)
     weak_influence_set = (0.1, 0.2, 0.3)
     weak_stubbornn_set = (0.1, 0.2, 0.3)
     uncertain_belief_set = (0.4, 0.5, 0.6)
-    strong_belief_set = (0.8, 0.9, 1.0)
+    strong_belief_set = (0.8, 0.9, 0.95)
     weak_belief_set = (0, 0.1, 0.2, 0.3)
-    strong_belief_conclusion =  [[0.90, 0.3, 0.90, 0.2, 0.4], [0.3, 0.90, 0.2, 0.80, 0.90]]
+    strong_belief_conclusion = [[0.90, 0.3, 0.90, 0.2, 0.4], [0.3, 0.90, 0.2, 0.80, 0.90]]
 
     belief_array_list = []
     influence_stubbornn_list = []
@@ -63,7 +64,7 @@ def initialisations(nb_doctors, case, n_args):
                 influence_stubbornn_list.append((influence, stubbornn))
                 belief_array_list.append((belief_array))
 
-        return(belief_array_list, influence_stubbornn_list)
+        return (belief_array_list, influence_stubbornn_list)
 
     if case == 2:
         '''
@@ -91,7 +92,7 @@ def initialisations(nb_doctors, case, n_args):
                 influence_stubbornn_list.append((influence, stubbornn))
                 belief_array_list.append((belief_array))
 
-        return(belief_array_list, influence_stubbornn_list)
+        return (belief_array_list, influence_stubbornn_list)
 
     if case == 3:
         '''
