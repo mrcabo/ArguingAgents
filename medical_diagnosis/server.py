@@ -84,13 +84,11 @@ class ServerClass:
 
         list_of_visualizations = [legend_belief_array, bar_chart, legend_conclusion, disease_line_chart, diagnosis,
                                   legend_avg_belief, avg_belief_line_chart]
-        model_legend = ""
-        if experiment_case == 1:  # Default case
-            model_legend = """<h1>Default Case Scenario.</h1><br><h3>The initial set of arguments is the 
-            following:</h3><br>
-            """
-            for arg_name, arg_idx in MedicalModel.LIST_OF_ARGUMENTS.items():
-                model_legend += "<b>" + arg_name + "</b>" + ": " + arg_idx + "<br>"
+        model_legend = """<h1>Default Case Scenario.</h1><br><h3>The initial set of arguments is the 
+        following:</h3><br>
+        """
+        for arg_name, arg_idx in MedicalModel.LIST_OF_ARGUMENTS.items():
+            model_legend += "<b>" + arg_name + "</b>" + ": " + arg_idx + "<br>"
 
         model_params = {
             "Legend": UserSettableParameter('static_text', value=model_legend),
