@@ -82,7 +82,7 @@ class MedicalModel(Model):
     LIST_OF_DISEASES = {"X": "Zika",
                         "Y": "Chikungunya"}
 
-    def __init__(self, N=3, n_init_arg=5, experiment_case=1, sigma=0.25, arg_weight_vector=None):
+    def __init__(self, N=3, n_init_arg=5, experiment_case="default", sigma=0.25, arg_weight_vector=None):
         self.num_agents = N
         self.n_initial_arguments = n_init_arg  # Number of initial arguments that doctors will consider
         self.experiment_case = experiment_case
@@ -98,42 +98,7 @@ class MedicalModel(Model):
                                       "Chikungunya": numpy.zeros(self.n_initial_arguments, dtype=float)}
         self.schedule = RandomActivation(self)  # Every tick, agents move in a different random order
 
-        if self.experiment_case == 1:  # default case
-            if (self.num_agents != 3) or (self.n_initial_arguments != 5):
-                print("Sorry, the default case only works with 3 doctors and 5 initial arguments")
-                exit()
-            # This should be fixed for the default case. For the batch is when it should be randomized
-            # belief_array = [[0.75, 0.30, 0.80, 0.50, 0.50],
-            #                 [0.80, 0.50, 0.70, 0.40, 0.50],
-            #                 [0.40, 0.70, 0.55, 0.75, 0.98]]
-            # Hard coding the weight vectors for the default case, as we feel like they should be..
-            self.arg_weight_vector["Zika"] = numpy.asarray([0.4, 0., 0.6, 0., 0.])
-            self.arg_weight_vector["Chikungunya"] = numpy.asarray([0., 0.25, 0., 0.25, 0.5])
-
-            # call intialisation with number of doctors, case number and number of arguments
-            placeholder = initialisations(nb_doctors=self.num_agents, case=2, n_args=5)
-            belief_array = placeholder[0]
-            influence_stubborn_list = placeholder[1]
-
-            # For testing different cases
-            for i in range(self.num_agents):
-                doctor = DoctorAgent(i, self, belief_array[i])
-                doctor.influence, doctor.stubbornness = influence_stubborn_list[i]
-                self.schedule.add(doctor)
-
-            # For the default case only
-            # for i in range(self.num_agents):
-            #     doctor = DoctorAgent(i, self, belief_array[i])
-            #     doctor.influence = 0.5
-            #     doctor.stubbornness = 0.5
-            #     if i == 2:
-            #         doctor.influence = 0.7
-            #         doctor.stubbornness = 0.7
-            #     self.schedule.add(doctor)
-
-            logger.info("Starting simulation for the default case. The initial set of arguments is the following:")
-
-        elif self.experiment_case == 2:  # Batch run case
+        if self.experiment_case == "batch":  # Batch run case
             for i in range(self.num_agents):
                 belief_array = random_belief_array(lenght=self.n_initial_arguments, sigma=sigma)
                 doctor = DoctorAgent(i, self, belief_array)
@@ -143,6 +108,27 @@ class MedicalModel(Model):
                 # print("Doctor {} has an influence value of {} and a stubbornness value of {}".format(
                 #     i, doctor.influence, doctor.stubbornness))
                 self.schedule.add(doctor)
+
+        else:
+            if (self.num_agents != 3) or (self.n_initial_arguments != 5):
+                print("Sorry, the default case only works with 3 doctors and 5 initial arguments")
+                exit()
+            # Hard coding the weight vectors for the default case, as we feel like they should be..
+            self.arg_weight_vector["Zika"] = numpy.asarray([0.4, 0., 0.6, 0., 0.])
+            self.arg_weight_vector["Chikungunya"] = numpy.asarray([0., 0.25, 0., 0.25, 0.5])
+
+            # call intialisation with number of doctors, case number and number of arguments
+            placeholder = initialisations(nb_doctors=self.num_agents, case=self.experiment_case, n_args=5)
+            belief_array = placeholder[0]
+            influence_stubborn_list = placeholder[1]
+
+            # For testing different cases
+            for i in range(self.num_agents):
+                doctor = DoctorAgent(i, self, belief_array[i])
+                doctor.influence, doctor.stubbornness = influence_stubborn_list[i]
+                self.schedule.add(doctor)
+
+            logger.info("Starting simulation for the default case. The initial set of arguments is the following:")
 
         self.calculate_committee()  # Calculates initial point for the committee decision.
 

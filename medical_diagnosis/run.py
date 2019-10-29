@@ -18,9 +18,8 @@ def parse_arguments():
                              'n_doctors')
     parser.add_argument('--n_init_arg', type=int, default=5,
                         help='Number of initial arguments.')
-    parser.add_argument('--experiment_case', type=int, default=1,
-                        help='Use the default case instead of random beliefs in arguments. (1-default case, '
-                             '2-batch run)')
+    parser.add_argument('--experiment_case', type=str, default="default",
+                        help='Which experiment to run. (valid options are: batch, default, 1, 2, 3 ,4 ,5)')
     parser.add_argument('--n_batch_iter', type=int, default=5,
                         help='Number of iterations in the batch run.')
     args = parser.parse_args()
@@ -43,7 +42,7 @@ if __name__ == '__main__':
 
     arguments = parse_arguments()
     n_doctors, n_init_arg, experiment_case, n_batch_iter = arguments
-    if experiment_case == 2:  # Batch run
+    if experiment_case == "batch":  # Batch run
         # Let's do that experiment_case is a batch run of the default case, so diseases are the same. Also,
         # ground truth remains Chikunguya.
         # Hard coding the weight vectors for the default case, as we feel like they should be..
@@ -51,7 +50,7 @@ if __name__ == '__main__':
                              "Chikungunya": np.asarray([0., 0.25, 0., 0.25, 0.5])}
         fixed_params = {
             "n_init_arg": n_init_arg,
-            "experiment_case": 2,
+            "experiment_case": experiment_case,
             "sigma": 0.25,
             "arg_weight_vector": arg_weight_vector
         }

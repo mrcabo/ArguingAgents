@@ -43,7 +43,12 @@ def initialisations(nb_doctors, case, n_args):
     belief_array_list = []
     influence_stubbornn_list = []
 
-    if case == 1:
+    try:
+        converted_case = int(case)
+    except ValueError:
+        converted_case = case
+
+    if converted_case == 1:
         '''
         Case 1: One doctor has strong influence, stubbornness and higher belief in certain conclusion.
         Other two doctors uncertain about both conclusions and have weak influence and stubbornness.
@@ -66,7 +71,7 @@ def initialisations(nb_doctors, case, n_args):
 
         return (belief_array_list, influence_stubbornn_list)
 
-    if case == 2:
+    elif converted_case == 2:
         '''
         Case 2: Two doctor strong influence and stubbornness and third uncertain doctor. Both doctors
         believe in opposite conclusion. Bipolar committee. Expectation: both try and influence the third doctor,
@@ -94,7 +99,7 @@ def initialisations(nb_doctors, case, n_args):
 
         return (belief_array_list, influence_stubbornn_list)
 
-    if case == 3:
+    elif converted_case == 3:
         '''
         Case 3: All three doctors with very weak influence and stubbornness and uncertain belief arrays towards
         both the conclusions. Expectation: more rounds of arguments needed to finally reach a conclusion.
@@ -109,7 +114,7 @@ def initialisations(nb_doctors, case, n_args):
 
         return (belief_array_list, influence_stubbornn_list)
 
-    if case == 4:
+    elif converted_case == 4:
         '''
         Case 4: All three doctors with very strong influence and stubbornness and uncertain belief arrays
         towards both conclusion. Expectation: more rounds of arguments needed to finally reach a conclusion.
@@ -124,7 +129,7 @@ def initialisations(nb_doctors, case, n_args):
 
         return (belief_array_list, influence_stubbornn_list)
 
-    if case == 5:
+    elif converted_case == 5:
         '''
         Case 5: All three doctors with 0.5 stubbornness and influence. Uncertain belief arrays.
         Will be an interesting observation.
@@ -137,3 +142,10 @@ def initialisations(nb_doctors, case, n_args):
             belief_array_list.append((belief_array))
 
         return (belief_array_list, influence_stubbornn_list)
+
+    else:  # default case
+        belief_array = [[0.75, 0.30, 0.80, 0.50, 0.50],
+                        [0.80, 0.50, 0.70, 0.40, 0.50],
+                        [0.40, 0.70, 0.55, 0.75, 0.98]]
+        influence_stubbornn_list = [(0.5, 0.5), (0.5, 0.5), (0.75, 0.75)]
+        return belief_array, influence_stubbornn_list
