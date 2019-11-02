@@ -59,12 +59,14 @@ class ServerClass:
             list_var.append(dict)
         avg_belief_line_chart = ChartModule(list_var)
 
+        # Create a line chart tracking the committee decision progress
         list_var = []
         for i, disease in enumerate(MedicalModel.LIST_OF_DISEASES.values()):
             dict = {"Label": disease, "Color": COLORS[i]}
             list_var.append(dict)
         disease_line_chart = ChartModule(list_var)
 
+        # Create bar chart to display the agents belief arrays
         list_var = []
         for i in range(self.n_init_arg):
             dict = {"Label": ARGUMENT_NAMES[i], "Color": COLORS[i]}
@@ -73,10 +75,8 @@ class ServerClass:
 
         diagnosis = PrintedDiagnosis()
 
-        # title = LegendElement("<h1>Welcome to our simulation</h1>")
         legend_belief_array = LegendElement('<font size="5"><b>1. </b></font> The graph below displays the belief '
                                             'array for each of the doctors (e.g. Doctor 0, Doctor 1..)')
-        # TODO: explain this legend more accurately
         legend_conclusion = LegendElement('<font size="5"><b>2. </b></font> The graph below displays the probability '
                                           'of the committee in each conclusion.')
         legend_avg_belief = LegendElement('The graph below represents the average belief between all doctors '

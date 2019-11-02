@@ -34,7 +34,6 @@ if __name__ == '__main__':
     # create file handler which logs even debug messages
     fh = logging.FileHandler('output.log', mode='w')
     fh.setLevel(logging.DEBUG)
-    # formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
     formatter = logging.Formatter('%(asctime)s - %(message)s', datefmt='%I:%M:%S %p')
     fh.setFormatter(formatter)
     logger.addHandler(fh)
@@ -60,7 +59,6 @@ if __name__ == '__main__':
         }
 
         # Create dictionary where the diagnosis probabilities will be tracked
-        # dict_batch_collector = {}
         dict_batch_collector = {"Final_decision": get_final_decision}
         for i, disease in enumerate(MedicalModel.LIST_OF_DISEASES.values()):
             disease_prob = partial(get_diagnosis_probabilities, i)

@@ -87,7 +87,6 @@ class MedicalModel(Model):
         self.n_initial_arguments = n_init_arg  # Number of initial arguments that doctors will consider
         self.experiment_case = experiment_case
         self.diagnosis_text = ""
-        # TODO:maybe calculate the diagnosis_probabilities before sending the to the collector, os it doesn't start at 0
         self.diagnosis_probabilities = numpy.zeros(len(self.LIST_OF_DISEASES)).tolist()
         self.final_decision = None
         # How relevant is said argument to reach conclusion X or Y
@@ -105,8 +104,6 @@ class MedicalModel(Model):
                 # Random influence values
                 doctor.influence = random_influence(0.5, 0.25)
                 doctor.stubbornness = random_influence(0.5, 0.25)
-                # print("Doctor {} has an influence value of {} and a stubbornness value of {}".format(
-                #     i, doctor.influence, doctor.stubbornness))
                 self.schedule.add(doctor)
 
         else:
@@ -201,7 +198,6 @@ class MedicalModel(Model):
         probabilities = softmax([probability_zika, probability_chikv])
 
         print(probabilities)
-        # TODO: this is a bit hard coded. it should be done better so it accepts different number of conclusions
         self.diagnosis_probabilities[0] = probabilities[0]
         self.diagnosis_probabilities[1] = probabilities[1]
 
